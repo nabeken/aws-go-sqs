@@ -27,6 +27,14 @@ func MaxNumberOfMessages(n int) ReceiveMessageRequest {
 	}
 }
 
+func UseAllAttribute() ReceiveMessageRequest {
+	return func(req *sqs.ReceiveMessageRequest) {
+		all := []string{"All"}
+		req.AttributeNames = all
+		req.MessageAttributeNames = all
+	}
+}
+
 type SendMessageRequest func(req *sqs.SendMessageRequest)
 
 func DelaySeconds(delay int) SendMessageRequest {
