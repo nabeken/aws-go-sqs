@@ -1,7 +1,7 @@
-package sqs
+package queue
 
 import (
-	"github.com/nabeken/aws-go-sqs/sqs/option"
+	"github.com/nabeken/aws-go-sqs/queue/option"
 
 	"github.com/stripe/aws-go/aws"
 	"github.com/stripe/aws-go/gen/sqs"
