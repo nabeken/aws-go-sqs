@@ -35,6 +35,13 @@ func UseAllAttribute() ReceiveMessageRequest {
 	}
 }
 
+func UseAttributes(attr ...string) ReceiveMessageRequest {
+	return func(req *sqs.ReceiveMessageRequest) {
+		req.AttributeNames = attr
+		req.MessageAttributeNames = attr
+	}
+}
+
 type SendMessageRequest func(req *sqs.SendMessageRequest)
 
 func DelaySeconds(delay int) SendMessageRequest {
