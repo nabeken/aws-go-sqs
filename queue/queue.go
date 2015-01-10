@@ -61,6 +61,12 @@ func (q *Queue) DeleteMessage(receiptHandle aws.StringValue) error {
 	})
 }
 
+func (q *Queue) PurgeQueue() error {
+	return q.SQS.PurgeQueue(&sqs.PurgeQueueRequest{
+		QueueURL: q.URL,
+	})
+}
+
 func GetQueueURL(s *sqs.SQS, name string) (aws.StringValue, error) {
 	req := &sqs.GetQueueURLRequest{
 		QueueName: aws.String(name),
