@@ -9,7 +9,7 @@ import (
 
 type Queue struct {
 	*sqs.SQS
-	url aws.StringValue
+	URL aws.StringValue
 }
 
 func New(s *sqs.SQS, name string) (*Queue, error) {
@@ -20,14 +20,14 @@ func New(s *sqs.SQS, name string) (*Queue, error) {
 
 	return &Queue{
 		SQS: s,
-		url: u,
+		URL: u,
 	}, nil
 }
 
 func (q *Queue) SendMessage(body string, opts ...option.SendMessageRequest) error {
 	req := &sqs.SendMessageRequest{
 		MessageBody: aws.String(body),
-		QueueURL:    q.url,
+		QueueURL:    q.URL,
 	}
 
 	for _, f := range opts {
@@ -40,7 +40,7 @@ func (q *Queue) SendMessage(body string, opts ...option.SendMessageRequest) erro
 
 func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageRequest) ([]sqs.Message, error) {
 	req := &sqs.ReceiveMessageRequest{
-		QueueURL: q.url,
+		QueueURL: q.URL,
 	}
 
 	for _, f := range opts {
@@ -56,7 +56,7 @@ func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageRequest) ([]sqs.Mess
 
 func (q *Queue) DeleteMessage(receiptHandle aws.StringValue) error {
 	return q.SQS.DeleteMessage(&sqs.DeleteMessageRequest{
-		QueueURL:      q.url,
+		QueueURL:      q.URL,
 		ReceiptHandle: receiptHandle,
 	})
 }
