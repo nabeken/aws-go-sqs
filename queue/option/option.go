@@ -28,11 +28,7 @@ func MaxNumberOfMessages(n int) ReceiveMessageRequest {
 }
 
 func UseAllAttribute() ReceiveMessageRequest {
-	return func(req *sqs.ReceiveMessageRequest) {
-		all := []string{"All"}
-		req.AttributeNames = all
-		req.MessageAttributeNames = all
-	}
+	return UseAttributes("All")
 }
 
 func UseAttributes(attr ...string) ReceiveMessageRequest {
