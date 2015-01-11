@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/suite"
 	"github.com/stripe/aws-go/aws"
 	"github.com/stripe/aws-go/gen/sqs"
@@ -87,6 +88,44 @@ func (s *SendMessageBatchSuite) TestSendMessageBatch() {
 			s.Equal(mav.StringValue, a.StringValue)
 		}
 		s.Equal(batchMessages[i].Body, *m.Body)
+		s.queue.DeleteMessage(m.ReceiptHandle)
+	}
+}
+
+func (s *SendMessageBatchSuite) TestSendMessageBatchError() {
+	attrs := map[string]interface{}{
+		"error": "",
+	}
+
+	batchMessages := []BatchMessage{
+		BatchMessage{
+			Body: "success",
+		},
+		BatchMessage{
+			Body:    "failed",
+			Options: []option.SendMessageRequest{option.MessageAttributes(attrs)},
+		},
+	}
+
+	if err := s.queue.SendMessageBatch(batchMessages...); s.Error(err) {
+		if merr, ok := err.(*multierror.Error); s.True(ok, "error must be *multierror.Error") {
+			s.Len(merr.Errors, 1)
+			if berr, ok := merr.Errors[0].(*BatchError); s.True(ok, "error must be *BatchError") {
+				s.Equal("msg-1", *berr.Entry.ID)
+			}
+		}
+	}
+
+	messages, err := s.queue.ReceiveMessage(
+		option.MaxNumberOfMessages(5),
+		option.UseAllAttribute(),
+	)
+	if !s.NoError(err) {
+		return
+	}
+
+	s.Len(messages, 1)
+	for _, m := range messages {
 		s.queue.DeleteMessage(m.ReceiptHandle)
 	}
 }
