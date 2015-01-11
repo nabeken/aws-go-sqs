@@ -43,11 +43,11 @@ func (s *SendMessageBatchSuite) SetupTest() {
 }
 
 func (s *SendMessageBatchSuite) TearDownTest() {
-	// don't care of the result
-	s.queue.PurgeQueue()
 }
 
 func (s *SendMessageBatchSuite) TearDownSuite() {
+	// don't care of the result
+	s.queue.PurgeQueue()
 }
 
 func (s *SendMessageBatchSuite) TestSendMessageBatch() {
