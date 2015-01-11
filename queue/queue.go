@@ -50,12 +50,20 @@ type BatchError struct {
 	Entry sqs.BatchResultErrorEntry
 }
 
+func newBatchError(errors []sqs.BatchResultErrorEntry) error {
+	var result error
+	for _, entry := range errors {
+		result = multierror.Append(result, &BatchError{Entry: entry})
+	}
+	return result
+}
+
 func (e *BatchError) Error() string {
 	return fmt.Sprintf("sqs: id: %s, code: %s, is_sender_failt: %s: %s",
-		e.Entry.ID,
-		e.Entry.Code,
-		e.Entry.SenderFault,
-		e.Entry.Message,
+		*e.Entry.ID,
+		*e.Entry.Code,
+		*e.Entry.SenderFault,
+		*e.Entry.Message,
 	)
 }
 
@@ -84,13 +92,7 @@ func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
 	if err != nil {
 		return err
 	}
-
-	var result error
-	for _, entry := range resp.Failed {
-		result = multierror.Append(result, &BatchError{Entry: entry})
-	}
-
-	return result
+	return newBatchError(resp.Failed)
 }
 
 func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageRequest) ([]sqs.Message, error) {
