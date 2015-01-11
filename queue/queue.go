@@ -27,6 +27,42 @@ func New(s *sqs.SQS, name string) (*Queue, error) {
 	}, nil
 }
 
+func (q *Queue) ChangeMessageVisibility(receiptHandle aws.StringValue, visibilityTimeout int) error {
+	req := &sqs.ChangeMessageVisibilityRequest{
+		ReceiptHandle:     receiptHandle,
+		VisibilityTimeout: aws.Integer(visibilityTimeout),
+		QueueURL:          q.URL,
+	}
+	return q.SQS.ChangeMessageVisibility(req)
+}
+
+type BatchChangeMessageVisibility struct {
+	ReceiptHandle     aws.StringValue
+	VisibilityTimeout int
+}
+
+func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibility) error {
+	entries := make([]sqs.ChangeMessageVisibilityBatchRequestEntry, len(opts))
+	for i, b := range opts {
+		entries[i] = sqs.ChangeMessageVisibilityBatchRequestEntry{
+			ID:                aws.String(fmt.Sprintf("msg-%d", i)),
+			ReceiptHandle:     b.ReceiptHandle,
+			VisibilityTimeout: aws.Integer(b.VisibilityTimeout),
+		}
+	}
+
+	req := &sqs.ChangeMessageVisibilityBatchRequest{
+		Entries:  entries,
+		QueueURL: q.URL,
+	}
+
+	resp, err := q.SQS.ChangeMessageVisibilityBatch(req)
+	if err != nil {
+		return err
+	}
+	return newBatchError(resp.Failed)
+}
+
 func (q *Queue) SendMessage(body string, opts ...option.SendMessageRequest) error {
 	req := &sqs.SendMessageRequest{
 		MessageBody: aws.String(body),
@@ -115,6 +151,33 @@ func (q *Queue) DeleteMessage(receiptHandle aws.StringValue) error {
 	return q.SQS.DeleteMessage(&sqs.DeleteMessageRequest{
 		QueueURL:      q.URL,
 		ReceiptHandle: receiptHandle,
+	})
+}
+
+func (q *Queue) DeleteMessageBatch(receiptHandles ...aws.StringValue) error {
+	entries := make([]sqs.DeleteMessageBatchRequestEntry, len(receiptHandles))
+	for i, rh := range receiptHandles {
+		entries[i] = sqs.DeleteMessageBatchRequestEntry{
+			ID:            aws.String(fmt.Sprintf("msg-%d", i)),
+			ReceiptHandle: rh,
+		}
+	}
+
+	req := &sqs.DeleteMessageBatchRequest{
+		Entries:  entries,
+		QueueURL: q.URL,
+	}
+
+	resp, err := q.SQS.DeleteMessageBatch(req)
+	if err != nil {
+		return err
+	}
+	return newBatchError(resp.Failed)
+}
+
+func (q *Queue) DeleteQueue() error {
+	return q.SQS.DeleteQueue(&sqs.DeleteQueueRequest{
+		QueueURL: q.URL,
 	})
 }
 
