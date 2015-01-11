@@ -111,7 +111,9 @@ func (s *SendMessageBatchSuite) TestSendMessageBatchError() {
 		if merr, ok := err.(*multierror.Error); s.True(ok, "error must be *multierror.Error") {
 			s.Len(merr.Errors, 1)
 			if berr, ok := merr.Errors[0].(*BatchError); s.True(ok, "error must be *BatchError") {
-				s.Equal("msg-1", *berr.Entry.ID)
+				s.Equal(1, berr.Index, "batchMessages[1] must be error")
+				s.Equal("InvalidParameterValue", berr.Code)
+				s.Equal(true, berr.SenderFault)
 			}
 		}
 	}

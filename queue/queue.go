@@ -43,12 +43,15 @@ type BatchChangeMessageVisibility struct {
 
 func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibility) error {
 	entries := make([]sqs.ChangeMessageVisibilityBatchRequestEntry, len(opts))
+	id2index := make(map[string]int)
 	for i, b := range opts {
+		id := aws.String(fmt.Sprintf("msg-%d", i))
 		entries[i] = sqs.ChangeMessageVisibilityBatchRequestEntry{
-			ID:                aws.String(fmt.Sprintf("msg-%d", i)),
+			ID:                id,
 			ReceiptHandle:     b.ReceiptHandle,
 			VisibilityTimeout: aws.Integer(b.VisibilityTimeout),
 		}
+		id2index[*id] = i
 	}
 
 	req := &sqs.ChangeMessageVisibilityBatchRequest{
@@ -60,7 +63,7 @@ func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibilit
 	if err != nil {
 		return err
 	}
-	return newBatchError(resp.Failed)
+	return newBatchError(id2index, resp.Failed)
 }
 
 func (q *Queue) SendMessage(body string, opts ...option.SendMessageRequest) error {
@@ -83,40 +86,52 @@ type BatchMessage struct {
 }
 
 type BatchError struct {
-	Entry sqs.BatchResultErrorEntry
+	Index       int
+	Code        string
+	Message     string
+	SenderFault bool
 }
 
-func newBatchError(errors []sqs.BatchResultErrorEntry) error {
+func newBatchError(id2index map[string]int, errors []sqs.BatchResultErrorEntry) error {
 	var result error
 	for _, entry := range errors {
-		result = multierror.Append(result, &BatchError{Entry: entry})
+		err := &BatchError{
+			Index:       id2index[*entry.ID],
+			Code:        *entry.Code,
+			Message:     *entry.Message,
+			SenderFault: *entry.SenderFault,
+		}
+		result = multierror.Append(result, err)
 	}
 	return result
 }
 
 func (e *BatchError) Error() string {
-	return fmt.Sprintf("sqs: id: %s, code: %s, is_sender_failt: %s: %s",
-		*e.Entry.ID,
-		*e.Entry.Code,
-		*e.Entry.SenderFault,
-		*e.Entry.Message,
+	return fmt.Sprintf("sqs: index: %s, code: %s, is_sender_failt: %s: %s",
+		e.Index,
+		e.Code,
+		e.SenderFault,
+		e.Message,
 	)
 }
 
 func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
 	entries := make([]sqs.SendMessageBatchRequestEntry, len(messages))
+	id2index := make(map[string]int)
 	for i, bm := range messages {
 		req_ := &sqs.SendMessageRequest{}
 		for _, f := range bm.Options {
 			f(req_)
 		}
 
+		id := aws.String(fmt.Sprintf("msg-%d", i))
 		entries[i] = sqs.SendMessageBatchRequestEntry{
 			DelaySeconds:      req_.DelaySeconds,
 			MessageAttributes: req_.MessageAttributes,
 			MessageBody:       aws.String(bm.Body),
-			ID:                aws.String(fmt.Sprintf("msg-%d", i)),
+			ID:                id,
 		}
+		id2index[*id] = i
 	}
 
 	req := &sqs.SendMessageBatchRequest{
@@ -128,7 +143,7 @@ func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
 	if err != nil {
 		return err
 	}
-	return newBatchError(resp.Failed)
+	return newBatchError(id2index, resp.Failed)
 }
 
 func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageRequest) ([]sqs.Message, error) {
@@ -156,11 +171,14 @@ func (q *Queue) DeleteMessage(receiptHandle aws.StringValue) error {
 
 func (q *Queue) DeleteMessageBatch(receiptHandles ...aws.StringValue) error {
 	entries := make([]sqs.DeleteMessageBatchRequestEntry, len(receiptHandles))
+	id2index := make(map[string]int)
 	for i, rh := range receiptHandles {
+		id := aws.String(fmt.Sprintf("msg-%d", i))
 		entries[i] = sqs.DeleteMessageBatchRequestEntry{
-			ID:            aws.String(fmt.Sprintf("msg-%d", i)),
+			ID:            id,
 			ReceiptHandle: rh,
 		}
+		id2index[*id] = i
 	}
 
 	req := &sqs.DeleteMessageBatchRequest{
@@ -172,7 +190,7 @@ func (q *Queue) DeleteMessageBatch(receiptHandles ...aws.StringValue) error {
 	if err != nil {
 		return err
 	}
-	return newBatchError(resp.Failed)
+	return newBatchError(id2index, resp.Failed)
 }
 
 func (q *Queue) DeleteQueue() error {
