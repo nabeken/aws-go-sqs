@@ -10,11 +10,14 @@ import (
 	"github.com/nabeken/aws-go-sqs/queue/option"
 )
 
+// A Queue is an SQS queue which holds queue url in URL.
+// Queue allows you to call actions without queue url for every call.
 type Queue struct {
 	*sqs.SQS
 	URL aws.StringValue
 }
 
+// New initializes Queue with queue name name.
 func New(s *sqs.SQS, name string) (*Queue, error) {
 	u, err := GetQueueURL(s, name)
 	if err != nil {
@@ -27,6 +30,7 @@ func New(s *sqs.SQS, name string) (*Queue, error) {
 	}, nil
 }
 
+// ChangeMessageVisibility changes a message visibiliy timeout.
 func (q *Queue) ChangeMessageVisibility(receiptHandle aws.StringValue, visibilityTimeout int) error {
 	req := &sqs.ChangeMessageVisibilityRequest{
 		ReceiptHandle:     receiptHandle,
