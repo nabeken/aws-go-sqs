@@ -1,6 +1,6 @@
 # aws-go-sqs
 
-[![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/nabeken/aws-go-sqs)
+[![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/nabeken/aws-go-sqs/queue)
 [![Build Status](https://img.shields.io/travis/nabeken/aws-go-sqs/master.svg)](https://travis-ci.org/nabeken/aws-go-sqs)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/nabeken/aws-go-sqs/blob/master/LICENSE)
 

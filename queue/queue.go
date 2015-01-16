@@ -10,11 +10,14 @@ import (
 	"github.com/nabeken/aws-go-sqs/queue/option"
 )
 
+// A Queue is an SQS queue which holds queue url in URL.
+// Queue allows you to call actions without queue url for every call.
 type Queue struct {
 	*sqs.SQS
 	URL aws.StringValue
 }
 
+// New initializes Queue with queue name name.
 func New(s *sqs.SQS, name string) (*Queue, error) {
 	u, err := GetQueueURL(s, name)
 	if err != nil {
@@ -27,6 +30,7 @@ func New(s *sqs.SQS, name string) (*Queue, error) {
 	}, nil
 }
 
+// ChangeMessageVisibility changes a message visibiliy timeout.
 func (q *Queue) ChangeMessageVisibility(receiptHandle aws.StringValue, visibilityTimeout int) error {
 	req := &sqs.ChangeMessageVisibilityRequest{
 		ReceiptHandle:     receiptHandle,
@@ -36,11 +40,14 @@ func (q *Queue) ChangeMessageVisibility(receiptHandle aws.StringValue, visibilit
 	return q.SQS.ChangeMessageVisibility(req)
 }
 
+// A BatchChangeMessageVisibility represents each request to
+// change a visibility timeout.
 type BatchChangeMessageVisibility struct {
 	ReceiptHandle     aws.StringValue
 	VisibilityTimeout int
 }
 
+// ChangeMessageVisibilityBatch changes a visibility timeout for each message in opts.
 func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibility) error {
 	entries := make([]sqs.ChangeMessageVisibilityBatchRequestEntry, len(opts))
 	id2index := make(map[string]int)
@@ -66,6 +73,7 @@ func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibilit
 	return newBatchError(id2index, resp.Failed)
 }
 
+// SendMessage sends a message to SQS queue. opts are used to change parameters for a message.
 func (q *Queue) SendMessage(body string, opts ...option.SendMessageRequest) error {
 	req := &sqs.SendMessageRequest{
 		MessageBody: aws.String(body),
@@ -80,11 +88,16 @@ func (q *Queue) SendMessage(body string, opts ...option.SendMessageRequest) erro
 	return err
 }
 
+// A BatchMessage represents each request to send a message.
+// Options are used to change parameters for the message.
 type BatchMessage struct {
 	Body    string
 	Options []option.SendMessageRequest
 }
 
+// A BatchError represents an error for batch operations such as SendMessageBatch and ChangeMessageVisibilityBatch.
+// Index can be used to identify a message causing the error.
+// See SendMessageBatch how to handle an error in batch operation.
 type BatchError struct {
 	Index       int
 	Code        string
@@ -115,19 +128,20 @@ func (e *BatchError) Error() string {
 	)
 }
 
+// SendMessageBatch sends messages to SQS queue.
 func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
 	entries := make([]sqs.SendMessageBatchRequestEntry, len(messages))
 	id2index := make(map[string]int)
 	for i, bm := range messages {
-		req_ := &sqs.SendMessageRequest{}
+		req := &sqs.SendMessageRequest{}
 		for _, f := range bm.Options {
-			f(req_)
+			f(req)
 		}
 
 		id := aws.String(fmt.Sprintf("msg-%d", i))
 		entries[i] = sqs.SendMessageBatchRequestEntry{
-			DelaySeconds:      req_.DelaySeconds,
-			MessageAttributes: req_.MessageAttributes,
+			DelaySeconds:      req.DelaySeconds,
+			MessageAttributes: req.MessageAttributes,
 			MessageBody:       aws.String(bm.Body),
 			ID:                id,
 		}
@@ -146,6 +160,8 @@ func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
 	return newBatchError(id2index, resp.Failed)
 }
 
+// ReceiveMessage receives messages from SQS queue.
+// opts are used to change parameters for a request.
 func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageRequest) ([]sqs.Message, error) {
 	req := &sqs.ReceiveMessageRequest{
 		QueueURL: q.URL,
@@ -162,6 +178,7 @@ func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageRequest) ([]sqs.Mess
 	return resp.Messages, nil
 }
 
+// DeleteMessage deletes a message from SQS queue.
 func (q *Queue) DeleteMessage(receiptHandle aws.StringValue) error {
 	return q.SQS.DeleteMessage(&sqs.DeleteMessageRequest{
 		QueueURL:      q.URL,
@@ -169,6 +186,7 @@ func (q *Queue) DeleteMessage(receiptHandle aws.StringValue) error {
 	})
 }
 
+// DeleteMessageBatch deletes messages from SQS queue.
 func (q *Queue) DeleteMessageBatch(receiptHandles ...aws.StringValue) error {
 	entries := make([]sqs.DeleteMessageBatchRequestEntry, len(receiptHandles))
 	id2index := make(map[string]int)
@@ -193,18 +211,22 @@ func (q *Queue) DeleteMessageBatch(receiptHandles ...aws.StringValue) error {
 	return newBatchError(id2index, resp.Failed)
 }
 
+// DeleteQueue deletes a queue in SQS.
 func (q *Queue) DeleteQueue() error {
 	return q.SQS.DeleteQueue(&sqs.DeleteQueueRequest{
 		QueueURL: q.URL,
 	})
 }
 
+// PurgeQueue purges messages in SQS queue.
+// It deletes all messages in SQS queue.
 func (q *Queue) PurgeQueue() error {
 	return q.SQS.PurgeQueue(&sqs.PurgeQueueRequest{
 		QueueURL: q.URL,
 	})
 }
 
+// GetQueueURL returns a URL for the given queue name.
 func GetQueueURL(s *sqs.SQS, name string) (aws.StringValue, error) {
 	req := &sqs.GetQueueURLRequest{
 		QueueName: aws.String(name),

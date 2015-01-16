@@ -3,6 +3,10 @@ language: go
 go:
   - 1.4
 
+before_script:
+  - go get github.com/golang/lint/golint
+
 script:
   - go build ./...
+  - golint ./...
   - go test -short -v ./...

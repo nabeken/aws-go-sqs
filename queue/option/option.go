@@ -7,30 +7,40 @@ import (
 	"github.com/stripe/aws-go/gen/sqs"
 )
 
+// The DataType is a type of data used in Attributes and Message Attributes.
 const (
 	DataTypeString = "String"
 	DataTypeNumber = "Number"
 	DataTypeBinary = "Binary"
 )
 
+// The ReceiveMessageRequest type is an adapter to change a parameter in
+// sqs.ReceiveMessageRequest.
 type ReceiveMessageRequest func(req *sqs.ReceiveMessageRequest)
 
+// VisibilityTimeout returns a ReceiveMessageRequest that changes a message visibility timeout.
 func VisibilityTimeout(timeout int) ReceiveMessageRequest {
 	return func(req *sqs.ReceiveMessageRequest) {
 		req.VisibilityTimeout = aws.Integer(timeout)
 	}
 }
 
+// MaxNumberOfMessages returns a ReceiveMessageRequest that
+// changes a max number of messages to receive to n.
 func MaxNumberOfMessages(n int) ReceiveMessageRequest {
 	return func(req *sqs.ReceiveMessageRequest) {
 		req.MaxNumberOfMessages = aws.Integer(n)
 	}
 }
 
+// UseAllAttribute returns a ReceiveMessageRequest that
+// changes a parameter to receive all messages regardless of attributes.
 func UseAllAttribute() ReceiveMessageRequest {
 	return UseAttributes("All")
 }
 
+// UseAttributes returns a ReceiveMessageRequest that
+// changes AttributeNames and MessageAttributeNames to attr.
 func UseAttributes(attr ...string) ReceiveMessageRequest {
 	return func(req *sqs.ReceiveMessageRequest) {
 		req.AttributeNames = attr
@@ -38,14 +48,21 @@ func UseAttributes(attr ...string) ReceiveMessageRequest {
 	}
 }
 
+// The SendMessageRequest type is an adapter to change a parameter in
+// sqs.SendMessageRequest.
 type SendMessageRequest func(req *sqs.SendMessageRequest)
 
+// DelaySeconds returns a SendMessageRequest that changes DelaySeconds to delay in seconds.
 func DelaySeconds(delay int) SendMessageRequest {
 	return func(req *sqs.SendMessageRequest) {
 		req.DelaySeconds = aws.Integer(delay)
 	}
 }
 
+// MessageAttributes returns a SendMessageRequest that changes MessageAttributes to attrs.
+// A string value in attrs sets to DataTypeString.
+// A []byte value in attrs sets to DataTypeBinary.
+// A int and int64 value in attrs sets to DataTypeNumber. Other types cause panicking.
 func MessageAttributes(attrs map[string]interface{}) SendMessageRequest {
 	return func(req *sqs.SendMessageRequest) {
 		if len(attrs) == 0 {
@@ -60,6 +77,8 @@ func MessageAttributes(attrs map[string]interface{}) SendMessageRequest {
 	}
 }
 
+// MessageAttributeValue returns a appropriate sqs.MessageAttributeValue by type assersion of v.
+// Types except string, []byte, int64 and int cause panicking.
 func MessageAttributeValue(v interface{}) sqs.MessageAttributeValue {
 	switch vv := v.(type) {
 	case string:
