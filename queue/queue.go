@@ -120,12 +120,30 @@ func newBatchError(id2index map[string]int, errors []sqs.BatchResultErrorEntry) 
 }
 
 func (e *BatchError) Error() string {
-	return fmt.Sprintf("sqs: index: %s, code: %s, is_sender_failt: %s: %s",
+	return fmt.Sprintf("sqs: index: %s, code: %s, is_sender_fault: %s: %s",
 		e.Index,
 		e.Code,
 		e.SenderFault,
 		e.Message,
 	)
+}
+
+// IsBatchError checks that err contains BatchError.
+// If err contains BatchError, it returns []*BatchError, true.
+// If not, it returns nil, false.
+func IsBatchError(err error) (errors []*BatchError, ok bool) {
+	merr, mok := err.(*multierror.Error)
+	if !mok {
+		return nil, false
+	}
+
+	for _, e := range merr.Errors {
+		berr, ok := e.(*BatchError)
+		if ok {
+			errors = append(errors, berr)
+		}
+	}
+	return errors, len(errors) > 0
 }
 
 // SendMessageBatch sends messages to SQS queue.

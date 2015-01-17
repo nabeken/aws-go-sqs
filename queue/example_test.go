@@ -34,3 +34,50 @@ func ExampleQueue_SendMessage() {
 
 	log.Print("successed!")
 }
+
+func ExampleQueue_SendMessageBatch() {
+	creds := aws.DetectCreds("", "", "")
+
+	// Create SQS instance
+	s := sqs.New(creds, "ap-northeast-1", nil)
+
+	// Create Queue instance
+	q, err := queue.New(s, "example-queue-name")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// MessageAttributes
+	attrs := map[string]interface{}{
+		"ATTR1": "STRING!!",
+	}
+
+	// Create messages for batch operation
+	batchMessages := []queue.BatchMessage{
+		queue.BatchMessage{
+			Body: "success",
+		},
+		queue.BatchMessage{
+			Body:    "failed",
+			Options: []option.SendMessageRequest{option.MessageAttributes(attrs)},
+		},
+	}
+
+	err = q.SendMessageBatch(batchMessages...)
+	if err != nil {
+		batchErrors, ok := queue.IsBatchError(err)
+		if !ok {
+			log.Fatal(err)
+		}
+		for _, e := range batchErrors {
+			if e.SenderFault {
+				// Continue if the failure is on the client side.
+				log.Print(e)
+				continue
+			}
+			// Retry if the failure is on the server side
+			// You can use e.Index to identify the message
+			// failedMessage := batchMessages[e.Index]
+		}
+	}
+}

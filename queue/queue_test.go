@@ -4,7 +4,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/stretchr/testify/suite"
 	"github.com/stripe/aws-go/aws"
 	"github.com/stripe/aws-go/gen/sqs"
@@ -108,13 +107,12 @@ func (s *SendMessageBatchSuite) TestSendMessageBatchError() {
 	}
 
 	if err := s.queue.SendMessageBatch(batchMessages...); s.Error(err) {
-		if merr, ok := err.(*multierror.Error); s.True(ok, "error must be *multierror.Error") {
-			s.Len(merr.Errors, 1)
-			if berr, ok := merr.Errors[0].(*BatchError); s.True(ok, "error must be *BatchError") {
-				s.Equal(1, berr.Index, "batchMessages[1] must be error")
-				s.Equal("InvalidParameterValue", berr.Code)
-				s.Equal(true, berr.SenderFault)
-			}
+		if berrs, ok := IsBatchError(err); s.True(ok, "error must contain *BatchError") {
+			s.Len(berrs, 1)
+
+			s.Equal(1, berrs[0].Index, "batchMessages[1] must be error")
+			s.Equal("InvalidParameterValue", berrs[0].Code)
+			s.Equal(true, berrs[0].SenderFault)
 		}
 	}
 
