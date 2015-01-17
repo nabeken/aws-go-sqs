@@ -8,6 +8,64 @@ aws-go-sqs is a SQS library built with [stripe/aws-go](https://github.com/stripe
 
 aws-go-sqs is highly unstable as aws-go is highly untested.
 
+## Status
+
+I think the underlying library [stripe/aws-go](https://github.com/stripe/aws-go) is now the feature complete at least for SQS.
+
+Since I've add API that I needed to this library, it is not completed but still useful.
+
 ## Example
 
-See [nabeken/golang-sqs-worker-example](https://github.com/nabeken/golang-sqs-worker-example).
+See more examples in [GoDoc](http://godoc.org/github.com/nabeken/aws-go-sqs/queue#pkg-examples).
+
+```go
+import (
+	"log"
+
+	"github.com/stripe/aws-go/aws"
+	"github.com/stripe/aws-go/gen/sqs"
+
+	"github.com/nabeken/aws-go-sqs/queue"
+	"github.com/nabeken/aws-go-sqs/queue/option"
+)
+
+creds := aws.DetectCreds("", "", "")
+
+// Create SQS instance
+s := sqs.New(creds, "ap-northeast-1", nil)
+
+// Create Queue instance
+q, err := queue.New(s, "example-queue-name")
+if err != nil {
+    log.Fatal(err)
+}
+
+// MessageAttributes
+attrs := map[string]interface{}{
+    "ATTR1": "STRING!!",
+    "ATTR2": 12345,
+}
+
+if err := q.SendMessage("MESSAGE BODY", option.MessageAttributes(attrs)); err != nil {
+    log.Fatal(err)
+}
+
+log.Print("successed!")
+```
+
+## Testing
+
+I've add some integration tests in `queue/queue_test.go`.
+
+If you want to run the tests, you *MUST* create a decicated queue for the tests.
+The test suite issues PurgeQueue in teardown.
+
+You can specify the name in environment variable.
+
+```sh
+$ cd queue
+$ export TEST_SQS_QUEUE_NAME=aws-go-sqs-test
+$ go test -v -tags debug
+```
+
+If you specify a debug tag, you get all HTTP request and response in stdout.
