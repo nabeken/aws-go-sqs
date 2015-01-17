@@ -1,3 +1,4 @@
+// Package option provides adapters to change a parameter in SQS request.
 package option
 
 import (
