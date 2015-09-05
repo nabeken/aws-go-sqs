@@ -15,7 +15,7 @@ const (
 	DataTypeBinary = "Binary"
 )
 
-// The ReceiveMessagInput type is an adapter to change a parameter in
+// The ReceiveMessageInput type is an adapter to change a parameter in
 // sqs.ReceiveMessageInput.
 type ReceiveMessageInput func(req *sqs.ReceiveMessageInput)
 
