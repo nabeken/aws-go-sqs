@@ -4,16 +4,15 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-	"github.com/stripe/aws-go/aws"
-	"github.com/stripe/aws-go/gen/sqs"
-
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/nabeken/aws-go-sqs/queue/option"
+	"github.com/stretchr/testify/suite"
 )
 
 func testSQSQueue(name string) (*Queue, error) {
 	return New(
-		sqs.New(aws.DetectCreds("", "", ""), "ap-northeast-1", nil),
+		sqs.New(&aws.Config{Region: aws.String("ap-northeast-1")}),
 		name,
 	)
 }
@@ -27,7 +26,7 @@ type SendMessageBatchSuite struct {
 func (s *SendMessageBatchSuite) SetupSuite() {
 	name := os.Getenv("TEST_SQS_QUEUE_NAME")
 	if len(name) == 0 {
-		s.T().Fatal("TEST_SQS_QUEUE_NAME must be set")
+		s.T().Skip("TEST_SQS_QUEUE_NAME must be set")
 	}
 
 	q, err := testSQSQueue(name)
@@ -45,8 +44,10 @@ func (s *SendMessageBatchSuite) TearDownTest() {
 }
 
 func (s *SendMessageBatchSuite) TearDownSuite() {
-	// don't care of the result
-	s.queue.PurgeQueue()
+	// don't care of the result but logs it
+	if err := s.queue.PurgeQueue(); err != nil {
+		s.T().Log(err)
+	}
 }
 
 func (s *SendMessageBatchSuite) TestSendMessageBatch() {
@@ -58,11 +59,11 @@ func (s *SendMessageBatchSuite) TestSendMessageBatch() {
 	batchMessages := []BatchMessage{
 		BatchMessage{
 			Body:    "body1",
-			Options: []option.SendMessageRequest{option.MessageAttributes(attrs)},
+			Options: []option.SendMessageInput{option.MessageAttributes(attrs)},
 		},
 		BatchMessage{
 			Body:    "body2",
-			Options: []option.SendMessageRequest{option.MessageAttributes(attrs)},
+			Options: []option.SendMessageInput{option.MessageAttributes(attrs)},
 		},
 	}
 
@@ -102,7 +103,7 @@ func (s *SendMessageBatchSuite) TestSendMessageBatchError() {
 		},
 		BatchMessage{
 			Body:    "failed",
-			Options: []option.SendMessageRequest{option.MessageAttributes(attrs)},
+			Options: []option.SendMessageInput{option.MessageAttributes(attrs)},
 		},
 	}
 
