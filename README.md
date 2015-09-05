@@ -4,13 +4,9 @@
 [![Build Status](https://img.shields.io/travis/nabeken/aws-go-sqs/master.svg)](https://travis-ci.org/nabeken/aws-go-sqs)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/nabeken/aws-go-sqs/blob/master/LICENSE)
 
-aws-go-sqs is a SQS library built with [stripe/aws-go](https://github.com/stripe/aws-go).
-
-aws-go-sqs is highly unstable as aws-go is highly untested.
+aws-go-sqs is a SQS library built with [aws/aws-sdk-go](https://github.com/aws/aws-sdk-go).
 
 ## Status
-
-I think the underlying library [stripe/aws-go](https://github.com/stripe/aws-go) is now the feature complete at least for SQS.
 
 Since I've add API that I needed to this library, it is not completed but still useful.
 
@@ -22,17 +18,15 @@ See more examples in [GoDoc](http://godoc.org/github.com/nabeken/aws-go-sqs/queu
 import (
 	"log"
 
-	"github.com/stripe/aws-go/aws"
-	"github.com/stripe/aws-go/gen/sqs"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sqs"
 
 	"github.com/nabeken/aws-go-sqs/queue"
 	"github.com/nabeken/aws-go-sqs/queue/option"
 )
 
-creds := aws.DetectCreds("", "", "")
-
 // Create SQS instance
-s := sqs.New(creds, "ap-northeast-1", nil)
+s := sqs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
 
 // Create Queue instance
 q, err := queue.New(s, "example-queue-name")

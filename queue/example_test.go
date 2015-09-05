@@ -3,18 +3,16 @@ package queue_test
 import (
 	"log"
 
-	"github.com/stripe/aws-go/aws"
-	"github.com/stripe/aws-go/gen/sqs"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sqs"
 
 	"github.com/nabeken/aws-go-sqs/queue"
 	"github.com/nabeken/aws-go-sqs/queue/option"
 )
 
 func ExampleQueue_SendMessage() {
-	creds := aws.DetectCreds("", "", "")
-
 	// Create SQS instance
-	s := sqs.New(creds, "ap-northeast-1", nil)
+	s := sqs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
 
 	// Create Queue instance
 	q, err := queue.New(s, "example-queue-name")
@@ -36,10 +34,8 @@ func ExampleQueue_SendMessage() {
 }
 
 func ExampleQueue_SendMessageBatch() {
-	creds := aws.DetectCreds("", "", "")
-
 	// Create SQS instance
-	s := sqs.New(creds, "ap-northeast-1", nil)
+	s := sqs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
 
 	// Create Queue instance
 	q, err := queue.New(s, "example-queue-name")
@@ -59,7 +55,7 @@ func ExampleQueue_SendMessageBatch() {
 		},
 		queue.BatchMessage{
 			Body:    "failed",
-			Options: []option.SendMessageRequest{option.MessageAttributes(attrs)},
+			Options: []option.SendMessageInput{option.MessageAttributes(attrs)},
 		},
 	}
 
