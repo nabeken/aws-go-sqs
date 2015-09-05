@@ -121,7 +121,7 @@ func NewBatchError(id2index map[string]int, errors []*sqs.BatchResultErrorEntry)
 }
 
 func (e *BatchError) Error() string {
-	return fmt.Sprintf("sqs: index: %s, code: %s, is_sender_fault: %s: %s",
+	return fmt.Sprintf("sqs: index: %d, code: %s, is_sender_fault: %v: message: %s",
 		e.Index,
 		e.Code,
 		e.SenderFault,
