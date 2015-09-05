@@ -148,23 +148,7 @@ func IsBatchError(err error) (errors []*BatchError, ok bool) {
 
 // SendMessageBatch sends messages to SQS queue.
 func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
-	entries := make([]*sqs.SendMessageBatchRequestEntry, len(messages))
-	id2index := make(map[string]int)
-	for i, bm := range messages {
-		req := &sqs.SendMessageInput{}
-		for _, f := range bm.Options {
-			f(req)
-		}
-
-		id := aws.String(fmt.Sprintf("msg-%d", i))
-		entries[i] = &sqs.SendMessageBatchRequestEntry{
-			DelaySeconds:      req.DelaySeconds,
-			MessageAttributes: req.MessageAttributes,
-			MessageBody:       aws.String(bm.Body),
-			Id:                id,
-		}
-		id2index[*id] = i
-	}
+	entries, id2index := BuildBatchRequestEntry(messages...)
 
 	req := &sqs.SendMessageBatchInput{
 		Entries:  entries,
@@ -258,4 +242,27 @@ func GetQueueURL(s *sqs.SQS, name string) (*string, error) {
 		return nil, err
 	}
 	return resp.QueueUrl, nil
+}
+
+// BuildBatchRequestEntry builds batch entries and id2index map.
+func BuildBatchRequestEntry(messages ...BatchMessage) ([]*sqs.SendMessageBatchRequestEntry, map[string]int) {
+	entries := make([]*sqs.SendMessageBatchRequestEntry, len(messages))
+	id2index := make(map[string]int)
+	for i, bm := range messages {
+		req := &sqs.SendMessageInput{}
+		for _, f := range bm.Options {
+			f(req)
+		}
+
+		id := aws.String(fmt.Sprintf("msg-%d", i))
+		entries[i] = &sqs.SendMessageBatchRequestEntry{
+			DelaySeconds:      req.DelaySeconds,
+			MessageAttributes: req.MessageAttributes,
+			MessageBody:       aws.String(bm.Body),
+			Id:                id,
+		}
+		id2index[*id] = i
+	}
+
+	return entries, id2index
 }
