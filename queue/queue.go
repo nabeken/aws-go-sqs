@@ -70,7 +70,7 @@ func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibilit
 	if err != nil {
 		return err
 	}
-	return newBatchError(id2index, resp.Failed)
+	return NewBatchError(id2index, resp.Failed)
 }
 
 // SendMessage sends a message to SQS queue. opts are used to change parameters for a message.
@@ -105,7 +105,8 @@ type BatchError struct {
 	SenderFault bool
 }
 
-func newBatchError(id2index map[string]int, errors []*sqs.BatchResultErrorEntry) error {
+// NewBatchError composes an error from errors if available.
+func NewBatchError(id2index map[string]int, errors []*sqs.BatchResultErrorEntry) error {
 	var result error
 	for _, entry := range errors {
 		err := &BatchError{
@@ -159,7 +160,7 @@ func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
 	if err != nil {
 		return err
 	}
-	return newBatchError(id2index, resp.Failed)
+	return NewBatchError(id2index, resp.Failed)
 }
 
 // ReceiveMessage receives messages from SQS queue.
@@ -211,7 +212,7 @@ func (q *Queue) DeleteMessageBatch(receiptHandles ...*string) error {
 	if err != nil {
 		return err
 	}
-	return newBatchError(id2index, resp.Failed)
+	return NewBatchError(id2index, resp.Failed)
 }
 
 // DeleteQueue deletes a queue in SQS.
