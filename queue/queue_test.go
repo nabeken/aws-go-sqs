@@ -44,8 +44,10 @@ func (s *SendMessageBatchSuite) TearDownTest() {
 }
 
 func (s *SendMessageBatchSuite) TearDownSuite() {
-	// don't care of the result
-	s.queue.PurgeQueue()
+	// don't care of the result but logs it
+	if err := s.queue.PurgeQueue(); err != nil {
+		s.T().Log(err)
+	}
 }
 
 func (s *SendMessageBatchSuite) TestSendMessageBatch() {
