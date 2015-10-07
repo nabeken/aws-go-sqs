@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	"github.com/hashicorp/go-multierror"
 	"github.com/nabeken/aws-go-sqs/queue/option"
 )
@@ -12,12 +13,12 @@ import (
 // A Queue is an SQS queue which holds queue url in URL.
 // Queue allows you to call actions without queue url for every call.
 type Queue struct {
-	*sqs.SQS
+	SQS sqsiface.SQSAPI
 	URL *string
 }
 
 // New initializes Queue with queue name name.
-func New(s *sqs.SQS, name string) (*Queue, error) {
+func New(s sqsiface.SQSAPI, name string) (*Queue, error) {
 	u, err := GetQueueURL(s, name)
 	if err != nil {
 		return nil, err
@@ -233,7 +234,7 @@ func (q *Queue) PurgeQueue() error {
 }
 
 // GetQueueURL returns a URL for the given queue name.
-func GetQueueURL(s *sqs.SQS, name string) (*string, error) {
+func GetQueueURL(s sqsiface.SQSAPI, name string) (*string, error) {
 	req := &sqs.GetQueueUrlInput{
 		QueueName: aws.String(name),
 	}
