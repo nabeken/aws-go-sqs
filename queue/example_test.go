@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 
-	"github.com/nabeken/aws-go-sqs/queue"
-	"github.com/nabeken/aws-go-sqs/queue/option"
+	"gopkg.in/nabeken/aws-go-sqs.v1/queue"
+	"gopkg.in/nabeken/aws-go-sqs.v1/queue/option"
 )
 
 func ExampleQueue_SendMessage() {

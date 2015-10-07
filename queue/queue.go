@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/go-multierror"
-	"github.com/nabeken/aws-go-sqs/queue/option"
+	"gopkg.in/nabeken/aws-go-sqs.v1/queue/option"
 )
 
 // A Queue is an SQS queue which holds queue url in URL.
