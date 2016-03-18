@@ -4,17 +4,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/nabeken/aws-go-sqs/queue/option"
 	"github.com/stretchr/testify/suite"
 )
 
 func testSQSQueue(name string) (*Queue, error) {
-	return New(
-		sqs.New(&aws.Config{Region: aws.String("ap-northeast-1")}),
-		name,
-	)
+	return New(sqs.New(session.New()), name)
 }
 
 type SendMessageBatchSuite struct {
