@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/nabeken/aws-go-sqs/queue/option"
 	"github.com/stretchr/testify/suite"
+	"gopkg.in/nabeken/aws-go-sqs.v2/queue/option"
 )
 
 func testSQSQueue(name string) (*Queue, error) {
