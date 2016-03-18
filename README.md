@@ -6,6 +6,10 @@
 
 aws-go-sqs is a SQS library built with [aws/aws-sdk-go](https://github.com/aws/aws-sdk-go).
 
+# gopkg.in
+
+We have [v1 branch](https://github.com/nabeken/aws-go-sqs/tree/v1) so you can import it from `gopkg.in/nabeken/aws-go-sqs.v1`.
+
 ## Status
 
 Since I've add API that I needed to this library, it is not completed but still useful.

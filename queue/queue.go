@@ -75,7 +75,7 @@ func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibilit
 }
 
 // SendMessage sends a message to SQS queue. opts are used to change parameters for a message.
-func (q *Queue) SendMessage(body string, opts ...option.SendMessageInput) error {
+func (q *Queue) SendMessage(body string, opts ...option.SendMessageInput) (*sqs.SendMessageOutput, error) {
 	req := &sqs.SendMessageInput{
 		MessageBody: aws.String(body),
 		QueueUrl:    q.URL,
@@ -85,8 +85,7 @@ func (q *Queue) SendMessage(body string, opts ...option.SendMessageInput) error 
 		f(req)
 	}
 
-	_, err := q.SQS.SendMessage(req)
-	return err
+	return q.SQS.SendMessage(req)
 }
 
 // A BatchMessage represents each request to send a message.
