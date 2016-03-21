@@ -1,6 +1,8 @@
 sudo: false
 language: go
 
+go_import_path: gopkg.in/nabeken/aws-go-sqs.v1
+
 go:
   - 1.5
 
