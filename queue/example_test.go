@@ -3,16 +3,15 @@ package queue_test
 import (
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-
 	"gopkg.in/nabeken/aws-go-sqs.v1/queue"
 	"gopkg.in/nabeken/aws-go-sqs.v1/queue/option"
 )
 
 func ExampleQueue_SendMessage() {
 	// Create SQS instance
-	s := sqs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
+	s := sqs.New(session.New())
 
 	// Create Queue instance
 	q, err := queue.New(s, "example-queue-name")
@@ -35,7 +34,7 @@ func ExampleQueue_SendMessage() {
 
 func ExampleQueue_SendMessageBatch() {
 	// Create SQS instance
-	s := sqs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
+	s := sqs.New(session.New())
 
 	// Create Queue instance
 	q, err := queue.New(s, "example-queue-name")

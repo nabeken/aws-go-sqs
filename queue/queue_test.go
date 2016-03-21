@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/nabeken/aws-go-sqs.v1/queue/option"
@@ -12,7 +12,7 @@ import (
 
 func testSQSQueue(name string) (*Queue, error) {
 	return New(
-		sqs.New(&aws.Config{Region: aws.String("ap-northeast-1")}),
+		sqs.New(session.New()),
 		name,
 	)
 }
