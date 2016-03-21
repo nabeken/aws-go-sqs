@@ -7,7 +7,8 @@ go:
   - 1.5
 
 before_script:
-  - go get github.com/golang/lint/golint
+  - "curl -L http://projects.tsuntsun.net/~nabeken/golint-linux > $GOPATH/bin/golint"
+  - "chmod u+x $GOPATH/bin/golint"
 
 script:
   - go build ./...
