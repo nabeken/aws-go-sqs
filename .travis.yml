@@ -1,11 +1,16 @@
 sudo: false
 language: go
 
+go_import_path: gopkg.in/nabeken/aws-go-sqs.v2
+
 go:
   - 1.5
+  - 1.6
 
 before_script:
-  - go get github.com/golang/lint/golint
+  - "mkdir $GOPATH/bin"
+  - "curl -L http://projects.tsuntsun.net/~nabeken/golint-linux > $GOPATH/bin/golint"
+  - "chmod u+x $GOPATH/bin/golint"
 
 script:
   - go build ./...
