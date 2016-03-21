@@ -7,6 +7,7 @@ go:
   - 1.5
 
 before_script:
+  - "mkdir $GOPATH/bin"
   - "curl -L http://projects.tsuntsun.net/~nabeken/golint-linux > $GOPATH/bin/golint"
   - "chmod u+x $GOPATH/bin/golint"
 
