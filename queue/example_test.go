@@ -5,14 +5,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-
 	"github.com/nabeken/aws-go-sqs/queue"
 	"github.com/nabeken/aws-go-sqs/queue/option"
 )
 
 func ExampleQueue_SendMessage() {
 	// Create SQS instance
-	s := sqs.New(session.New())
+	s := sqs.New(session.Must(session.NewSession()))
 
 	// Create Queue instance
 	q, err := queue.New(s, "example-queue-name")
@@ -35,7 +34,7 @@ func ExampleQueue_SendMessage() {
 
 func ExampleQueue_SendMessageBatch() {
 	// Create SQS instance
-	s := sqs.New(session.New())
+	s := sqs.New(session.Must(session.NewSession()))
 
 	// Create Queue instance
 	q, err := queue.New(s, "example-queue-name")
