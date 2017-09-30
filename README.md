@@ -6,7 +6,9 @@
 
 aws-go-sqs is a SQS library built with [aws/aws-sdk-go](https://github.com/aws/aws-sdk-go).
 
-# gopkg.in
+# Versions
+
+From v3 train (and `master` branch), we no longer use `gopkg.in` but will tag each release by following semver.
 
 - We have [v1 branch](https://github.com/nabeken/aws-go-sqs/tree/v1) so you can import it from `gopkg.in/nabeken/aws-go-sqs.v1`.
 - We have [v2 branch](https://github.com/nabeken/aws-go-sqs/tree/v2) so you can import it from `gopkg.in/nabeken/aws-go-sqs.v2`.
@@ -17,54 +19,18 @@ Since I've add API that I needed to this library, it is not completed but still 
 
 ## Example
 
-See more examples in [GoDoc](http://godoc.org/github.com/nabeken/aws-go-sqs/queue#pkg-examples).
-
-```go
-import (
-	"log"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-
-	"github.com/nabeken/aws-go-sqs/queue"
-	"github.com/nabeken/aws-go-sqs/queue/option"
-)
-
-// Create SQS instance
-s := sqs.New(&aws.Config{Region: aws.String("ap-northeast-1")})
-
-// Create Queue instance
-q, err := queue.New(s, "example-queue-name")
-if err != nil {
-    log.Fatal(err)
-}
-
-// MessageAttributes
-attrs := map[string]interface{}{
-    "ATTR1": "STRING!!",
-    "ATTR2": 12345,
-}
-
-if err := q.SendMessage("MESSAGE BODY", option.MessageAttributes(attrs)); err != nil {
-    log.Fatal(err)
-}
-
-log.Print("successed!")
-```
+See examples in [GoDoc](http://godoc.org/github.com/nabeken/aws-go-sqs/queue#pkg-examples).
 
 ## Testing
 
-I've add some integration tests in `queue/queue_test.go`.
+We have some integration tests in `queue/queue_test.go`.
 
-If you want to run the tests, you *MUST* create a decicated queue for the tests.
-The test suite issues PurgeQueue in teardown.
+If you want to run the tests, please create a dedicated queue for the tests. The test suite will issue PurgeQueue API, which purge all messages, in the teardown.
 
 You can specify the name in environment variable.
 
 ```sh
 $ cd queue
 $ export TEST_SQS_QUEUE_NAME=aws-go-sqs-test
-$ go test -v -tags debug
+$ go test -v
 ```
-
-If you specify a debug tag, you get all HTTP request and response in stdout.
