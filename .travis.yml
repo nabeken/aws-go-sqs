@@ -3,11 +3,10 @@ language: go
 
 go:
   - tip
-  - 1.9
-  - 1.8
+  - 1.11.x
 
 before_script:
-  - go get -u github.com/golang/lint/golint
+  - go get -u golang.org/x/lint/golint
 
 script:
   - go build ./...
