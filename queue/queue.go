@@ -17,7 +17,7 @@ type Queue struct {
 	URL *string
 }
 
-// New initializes Queue with queue name name.
+// New initializes Queue with name.
 func New(s sqsiface.SQSAPI, name string) (*Queue, error) {
 	u, err := GetQueueURL(s, name)
 	if err != nil {
@@ -28,6 +28,16 @@ func New(s sqsiface.SQSAPI, name string) (*Queue, error) {
 		SQS: s,
 		URL: u,
 	}, nil
+}
+
+// MustNew initializes Queue with name.
+// It will panic when it fails to initialize a queue.
+func MustNew(s sqsiface.SQSAPI, name string) *Queue {
+	q, err := New(s, name)
+	if err != nil {
+		panic(err)
+	}
+	return q
 }
 
 // ChangeMessageVisibility changes a message visibiliy timeout.
