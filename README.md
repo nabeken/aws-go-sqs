@@ -75,7 +75,7 @@ Let's use all of the available queues all the time and stop sending requests to 
 
 ## Status
 
-Since I've add API that I needed to this library, it is not completed but still useful.
+Since I've added API that I needed to this library, it is not completed but still useful.
 
 ## Example
 
