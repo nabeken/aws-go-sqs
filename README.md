@@ -69,9 +69,9 @@ You can find [example/test-multiqueue](example/test-multiqueue) for the full exa
 
 ## Design note
 
-When it comes to multi-region deployment, you may think about *primary* and *secondary* and use secondary when the primary becomes unavailable. Such failover codepath won't be called until the primary becomes unavailable so you have a rare chance to get it tested in production. You may agree that such code may contain a bug and the bug will be triggered when you're on fire.
+When it comes to multi-region deployment, you may think about *primary* and *secondary* and use secondary when the primary becomes unavailable. Such failover codepath won't be called until the primary becomes unavailable so you have a rare chance to get it tested in production. You may agree that such code may contain a bug and the bug will be triggered when you're on fire. You also need to define what "unavailable" is to you.
 
-Let's use both queues all the time. Don't let it be failover.
+Let's use both queues all the time and stop sending requests to an unavailable queue until it recovers.
 
 ## Status
 
