@@ -35,7 +35,7 @@ Since SQS is just a message bus between components, deploying SQS to the multipl
 - a slice of "available" `*queue.Queue`
 - circuit breakers for each `*queue.Queue`
 
-When the circuit state transitions to open, the dispatcher will remove the associated queue from the "available" slice so that it won't be used. The circuit breaker will update the state to half-opened then the dispatcher will push it back to "available" slice. If there is no further error, the state will be closed.
+When the circuit state transitions to open, the dispatcher will remove the associated queue from the "available" slice so that it won't be used. The circuit breaker will update the state to half-opened then the dispatcher will push it back to "available" slice. If there is no further error, the circuit will be closed.
 
 When there is no queue in the "available" slice, the dispatcher returns a queue from all of the `*queue.Queue` by random.
 
