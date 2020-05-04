@@ -42,6 +42,14 @@ func WaitTimeSeconds(n int64) ReceiveMessageInput {
 	}
 }
 
+// WaitTimeSeconds returns a ReceiveMessageInput that
+// changes WaitTimeSeconds parameter.
+func WaitTimeSeconds(n int64) ReceiveMessageInput {
+	return func(req *sqs.ReceiveMessageInput) {
+		req.WaitTimeSeconds = aws.Int64(n)
+	}
+}
+
 // UseAllAttribute returns a ReceiveMessageInput that
 // changes a parameter to receive all messages regardless of attributes.
 func UseAllAttribute() ReceiveMessageInput {
