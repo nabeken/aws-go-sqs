@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/mercari/go-circuitbreaker"
@@ -23,7 +25,9 @@ import (
 
 func main() {
 	var queueName1 = flag.String("queue1", "", "specify SQS queue name 1")
+	var region1 = flag.String("region1", "ap-northeast-1", "specify a region for queue1")
 	var queueName2 = flag.String("queue2", "", "specify SQS queue name 2")
+	var region2 = flag.String("region2", "ap-southeast-1", "specify a region for queue2")
 	var drain = flag.Bool("drain", false, "drain")
 	var concurrency = flag.Int("concurrency", 1, "specify concurrency")
 	var count = flag.Int("count", 10000, "number of messages")
@@ -46,12 +50,17 @@ func main() {
 		cancel()
 	}()
 
-	// Create SQS instance
-	s := sqs.New(session.Must(session.NewSession()))
+	// Create SQS instance for region1
+	s1 := sqs.New(session.Must(session.NewSession(&aws.Config{
+		Region: region1,
+	})))
+	s2 := sqs.New(session.Must(session.NewSession(&aws.Config{
+		Region: region2,
+	})))
 
 	// Create Queue instance
-	q1 := queue.MustNew(s, *queueName1)
-	q2 := queue.MustNew(s, *queueName2)
+	q1 := queue.MustNew(s1, *queueName1)
+	q2 := queue.MustNew(s2, *queueName2)
 
 	// if we do not set OpenTimeout nor OpenBackOff, the default value of OpenBackOff will be used.
 	cbOpts := &circuitbreaker.Options{
@@ -65,7 +74,10 @@ func main() {
 		})
 
 	fss := &failureScenarioServer{
-		q: q1,
+		scenario: []failureScenario{
+			{URL: *q1.URL},
+			{URL: *q2.URL},
+		},
 	}
 	go func() {
 		log.Print("starting failure injection HTTP server...")
@@ -126,6 +138,7 @@ LOOP:
 				exec := d.Dispatch()
 				_, err := exec.Do(ctx, func() (interface{}, error) {
 					if err := fss.failureScenario(exec.Queue); err != nil {
+						time.Sleep(100 * time.Millisecond)
 						return nil, err
 					}
 
@@ -134,6 +147,9 @@ LOOP:
 
 				if err != nil {
 					log.Printf("%s: unable to send the message. will retry: %s", *exec.Queue.URL, err)
+					if err == circuitbreaker.ErrOpen {
+						time.Sleep(time.Second)
+					}
 				} else {
 					log.Printf("%s: the message has been sent (%d)", *exec.Queue.URL, cnt)
 					break
@@ -182,26 +198,37 @@ func recv(ctx context.Context, d *multiqueue.Dispatcher) int64 {
 	}
 }
 
-type failureScenarioServer struct {
-	// queue going to be failed
-	q *queue.Queue
+type failureScenario struct {
+	URL     string
+	Until   time.Time
+	ErrRate float64
+}
 
-	mu      sync.Mutex
-	until   time.Time
-	errRate float64
+type failureScenarioServer struct {
+	mu       sync.Mutex
+	scenario []failureScenario
+}
+
+func (s *failureScenarioServer) findScenario(q *queue.Queue) (failureScenario, bool) {
+	for _, sc := range s.scenario {
+		if sc.URL == *q.URL {
+			return sc, true
+		}
+	}
+	return failureScenario{}, false
 }
 
 func (s *failureScenarioServer) failureScenario(q *queue.Queue) error {
-	// q is not the queue we want to be failed
-	if q != s.q {
+	sc, found := s.findScenario(q)
+	if !found {
 		return nil
 	}
 
-	if time.Now().Before(s.until) {
-		if rand.Float64() > s.errRate {
+	if time.Now().Before(sc.Until) {
+		if rand.Float64() > sc.ErrRate {
 			return nil
 		}
-		return fmt.Errorf("this is a failure scenario until %s", s.until.Format(time.RFC3339))
+		return fmt.Errorf("this is a failure scenario until %s", sc.Until.Format(time.RFC3339))
 	}
 
 	return nil
@@ -209,6 +236,12 @@ func (s *failureScenarioServer) failureScenario(q *queue.Queue) error {
 
 func (s *failureScenarioServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	index, err := strconv.ParseInt(req.Form.Get("index"), 10, 64)
+	if err != nil {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -227,6 +260,12 @@ func (s *failureScenarioServer) ServeHTTP(rw http.ResponseWriter, req *http.Requ
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.errRate = errRate
-	s.until = time.Now().Add(dur)
+	if index > int64(len(s.scenario))-1 {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+		return
+	}
+	s.scenario[index].Until = time.Now().Add(dur)
+	s.scenario[index].ErrRate = errRate
+
+	json.NewEncoder(rw).Encode(s.scenario)
 }
