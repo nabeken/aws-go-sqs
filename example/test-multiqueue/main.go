@@ -93,14 +93,14 @@ func main() {
 	}()
 
 	execs := d.GetExecutors()
-	cntCh := make(chan int64, *concurrency*len(execs))
+	messagesCh := make(chan []string, *concurrency*len(execs))
 
 	for _, exec := range execs {
 		for i := 0; i < *concurrency; i++ {
 			wg.Add(1)
 			go func(exec *multiqueue.Executor) {
 				defer wg.Done()
-				cntCh <- recv(ctx, exec)
+				messagesCh <- recv(ctx, exec)
 			}(exec)
 		}
 	}
@@ -115,12 +115,27 @@ func main() {
 
 	wg.Wait()
 
-	var total int64
+	var messages []string
 	for i := 0; i < *concurrency*len(execs); i++ {
-		total += <-cntCh
+		messages = append(messages, <-messagesCh...)
 	}
 
-	log.Printf("done! total: %d", total)
+	total := len(messages)
+	uniqueTotal := len(uniq(messages))
+
+	log.Printf("done! total: %d unique: %d", total, uniqueTotal)
+}
+
+func uniq(ss []string) []string {
+	m := map[string]struct{}{}
+	var ret []string
+	for _, s := range ss {
+		if _, found := m[s]; !found {
+			m[s] = struct{}{}
+			ret = append(ret, s)
+		}
+	}
+	return ret
 }
 
 func send(ctx context.Context, count, concurrency int, d *multiqueue.Dispatcher, fss *failureScenarioServer) {
@@ -171,15 +186,15 @@ LOOP:
 	log.Print("sent!")
 }
 
-func recv(ctx context.Context, exec *multiqueue.Executor) int64 {
+func recv(ctx context.Context, exec *multiqueue.Executor) []string {
 	log.Printf("%s: starting receiver...", *exec.URL)
 
-	var cnt int64
+	var messages []string
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("shutting down receiver... count:%d", cnt)
-			return cnt
+			log.Printf("shutting down receiver... count:%d", len(messages))
+			return messages
 		default:
 		}
 
@@ -194,10 +209,11 @@ func recv(ctx context.Context, exec *multiqueue.Executor) int64 {
 			if err := exec.DeleteMessage(m.ReceiptHandle); err != nil {
 				log.Printf("unable to delete message: %s", err)
 			}
-
-			cnt++
+			messages = append(messages, *m.Body)
 		}
 	}
+
+	return messages
 }
 
 type failureScenario struct {
