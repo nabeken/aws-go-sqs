@@ -59,6 +59,14 @@ func New(cbOpts *circuitbreaker.Options, queues ...*queue.Queue) *Dispatcher {
 	return d
 }
 
+func (d *Dispatcher) GetExecutors() []*Executor {
+	var execs []*Executor
+	for i := range d.queues {
+		execs = append(execs, d.dispatch(d.queues[i]))
+	}
+	return execs
+}
+
 func (d *Dispatcher) buildCircuitBreaker(opts *circuitbreaker.Options) {
 	cb := map[string]*circuitbreaker.CircuitBreaker{}
 	for i := range d.queues {
