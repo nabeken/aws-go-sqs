@@ -71,6 +71,16 @@ _, err := exec.Do(ctx, func() (interface{}, error) {
 
 You can find [example/test-multiqueue](example/test-multiqueue) for the full example.
 
+## Consideration for ReceiveMessage via `multiqueue`
+
+There is a case which causes the performance issue when there are no messages in one of the registered queues.
+
+Let's say you have two queues: Queue A has 1000 messages and Queue B has no messages.
+
+`Dispatcher.Dispatch()` will return one of the registered queues. The problem is when the B is returned. SQS will block until new message arrives for 20 seconds in default (WaitReceiveTime). You spend 20 seconds even you have 1000 messages in the A. If, unfortunately, the dispatcher returns B again, you will spend additional 20 seconds.
+
+To avoid this situation, you should poll all the registered queueus in parallel. `Dispatcher.GetExecutors()` will return all of the registered queue wrapped with `Executor` so that you still can call the API over the circuit breaker.
+
 ## Design note
 
 When it comes to multi-region deployment, you may think about *primary* and *secondary* and use secondary when the primary becomes unavailable. Such failover codepath won't be called until the primary becomes unavailable so you have a rare chance to get it tested in production. You may agree that such code may contain a bug or the secondary queue configuration may not be up-to-date since mostly the secondary queue is not used at all. Any hidden problems would be triggered when you're on fire.
