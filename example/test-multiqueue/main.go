@@ -92,13 +92,17 @@ func main() {
 		d.StartStateMonitor(ctx)
 	}()
 
-	cntCh := make(chan int64, *concurrency)
-	for i := 0; i < *concurrency; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			cntCh <- recv(ctx, d)
-		}()
+	execs := d.GetExecutors()
+	cntCh := make(chan int64, *concurrency*len(execs))
+
+	for _, exec := range execs {
+		for i := 0; i < *concurrency; i++ {
+			wg.Add(1)
+			go func(exec *multiqueue.Executor) {
+				defer wg.Done()
+				cntCh <- recv(ctx, exec)
+			}(exec)
+		}
 	}
 
 	if !*drain {
@@ -112,7 +116,7 @@ func main() {
 	wg.Wait()
 
 	var total int64
-	for i := 0; i < *concurrency; i++ {
+	for i := 0; i < *concurrency*len(execs); i++ {
 		total += <-cntCh
 	}
 
@@ -167,8 +171,8 @@ LOOP:
 	log.Print("sent!")
 }
 
-func recv(ctx context.Context, d *multiqueue.Dispatcher) int64 {
-	log.Print("starting receiver...")
+func recv(ctx context.Context, exec *multiqueue.Executor) int64 {
+	log.Printf("%s: starting receiver...", *exec.URL)
 
 	var cnt int64
 	for {
@@ -179,10 +183,8 @@ func recv(ctx context.Context, d *multiqueue.Dispatcher) int64 {
 		default:
 		}
 
-		exec := d.DispatchByRR()
 		resp, err := exec.ReceiveMessage(
 			option.MaxNumberOfMessages(10),
-			option.WaitTimeSeconds(0),
 		)
 		if err != nil {
 			log.Printf("unable to receive message: %s", err)
