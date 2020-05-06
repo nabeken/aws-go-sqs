@@ -130,10 +130,13 @@ func (d *Dispatcher) handleStateChange(q *queue.Queue, prev, cur circuitbreaker.
 func (d *Dispatcher) DispatchByRR() *Executor {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	return d.dispatch(d.dispatchByRR())
+}
 
-	// when there is no available queues, it just call the normal dispatcher.
+// caller of this must hold the lock
+func (d *Dispatcher) dispatchByRR() *queue.Queue {
 	if len(d.avail) == 0 {
-		return d.Dispatch()
+		return d.dispatchByRandom()
 	}
 
 	if d.nextIndex >= len(d.avail) {
@@ -142,27 +145,26 @@ func (d *Dispatcher) DispatchByRR() *Executor {
 
 	i := d.nextIndex
 	d.nextIndex++
-	q := d.avail[i]
-	return &Executor{
-		Queue: q,
-		cb:    d.cb[*q.URL],
+	return d.avail[i]
+}
+
+// caller of this must hold the lock
+func (d *Dispatcher) dispatchByRandom() *queue.Queue {
+	// when there is no available queue, it will choose a queue from all of the registered queues
+	if len(d.avail) > 0 {
+		return d.avail[d.rand.Intn(len(d.avail))]
 	}
+	return d.queues[d.rand.Intn(len(d.queues))]
 }
 
 // Dispatch dispatches Executor by random.
 func (d *Dispatcher) Dispatch() *Executor {
 	d.mu.Lock()
 	defer d.mu.Unlock()
+	return d.dispatch(d.dispatchByRandom())
+}
 
-	var q *queue.Queue
-
-	// when there is no available queue, it will choose a queue from all of the registered queues
-	if len(d.avail) > 0 {
-		q = d.avail[d.rand.Intn(len(d.avail))]
-	} else {
-		q = d.queues[d.rand.Intn(len(d.queues))]
-	}
-
+func (d *Dispatcher) dispatch(q *queue.Queue) *Executor {
 	return &Executor{
 		Queue: q,
 		cb:    d.cb[*q.URL],
