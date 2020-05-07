@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/mercari/go-circuitbreaker"
-	"github.com/nabeken/aws-go-sqs/v3/queue"
+	"github.com/nabeken/aws-go-sqs/queue"
 )
 
 // Dispatcher manages multiple *queue.Queue instances with circit breaker and dispatches it by random or round-robin.

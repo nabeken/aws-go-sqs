@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/nabeken/aws-go-sqs/v3/queue/option"
+	"github.com/nabeken/aws-go-sqs/queue/option"
 	"github.com/stretchr/testify/suite"
 )
 

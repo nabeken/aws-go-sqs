@@ -1,4 +1,4 @@
-module github.com/nabeken/aws-go-sqs/v3
+module github.com/nabeken/aws-go-sqs
 
 go 1.14
 

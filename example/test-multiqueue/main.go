@@ -18,9 +18,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/mercari/go-circuitbreaker"
-	"github.com/nabeken/aws-go-sqs/v3/multiqueue"
-	"github.com/nabeken/aws-go-sqs/v3/queue"
-	"github.com/nabeken/aws-go-sqs/v3/queue/option"
+	"github.com/nabeken/aws-go-sqs/multiqueue"
+	"github.com/nabeken/aws-go-sqs/queue"
+	"github.com/nabeken/aws-go-sqs/queue/option"
 )
 
 func main() {
