@@ -52,6 +52,7 @@ func TestDispatcher(t *testing.T) {
 		{
 			dq := d.Dispatch()
 			assert.Equal(q, dq.Queue)
+			assert.Equal(q, d.DispatchByRR().Queue)
 
 			givenErr := errors.New("unknown error")
 			_, err := dq.Do(context.TODO(), func() (interface{}, error) {
@@ -74,10 +75,38 @@ func TestDispatcher(t *testing.T) {
 			// while the all of the circuit opened, dispatcher returns a queue from the slice
 			dq := d.Dispatch()
 			assert.Equal(q, dq.Queue)
+			assert.Equal(q, d.DispatchByRR().Queue)
 		}
 
 		t.Log("waiting for the circuit to be half-open")
 		time.Sleep(5 * time.Second)
 		assert.Equal(circuitbreaker.StateHalfOpen, d.monitor.curState["dummy"])
 	})
+}
+
+func TestDispatcher_DispatchByRR(t *testing.T) {
+	opts := &circuitbreaker.Options{
+		Interval:    5 * time.Minute,
+		OpenTimeout: 5 * time.Second,
+		ShouldTrip:  circuitbreaker.NewTripFuncConsecutiveFailures(1),
+	}
+	d := New(
+		opts,
+		&queue.Queue{URL: aws.String("dummy1")},
+		&queue.Queue{URL: aws.String("dummy2")},
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() { d.StartStateMonitor(ctx) }()
+
+	t.Log("waiting for monitor")
+	time.Sleep(1 * time.Second)
+
+	assert := assert.New(t)
+	assert.Equal(d.queues[0], d.DispatchByRR().Queue)
+	assert.Equal(d.queues[1], d.DispatchByRR().Queue)
+	assert.Equal(d.queues[0], d.DispatchByRR().Queue)
+	assert.Equal(d.queues[1], d.DispatchByRR().Queue)
 }
