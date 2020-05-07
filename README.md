@@ -1,7 +1,7 @@
 # aws-go-sqs
 
 [![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/nabeken/aws-go-sqs/queue)
-[![Build Status](https://github.com/nabeken/aws-go-sqs/workflows/go/badge.svg)
+[![Build Status](https://github.com/nabeken/aws-go-sqs/workflows/go/badge.svg)](https://github.com/nabeken/aws-go-sqs/actions?query=workflow%3AGo)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/nabeken/aws-go-sqs/blob/master/LICENSE)
 
 aws-go-sqs is a SQS library built with [aws/aws-sdk-go](https://github.com/aws/aws-sdk-go).
