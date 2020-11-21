@@ -89,9 +89,11 @@ Let's use all of the available queues all the time and stop sending requests to 
 
 AWS recommends this patterns in Well-Architected Framework.
 > https://wa.aws.amazon.com/wat.question.REL_11.en.html says:
+>
 > Use static stability to prevent bimodal behavior: Bimodal behavior is when your workload exhibits different behavior under normal and failure modes, for example, relying on launching new instances if an Availability Zone fails. You should instead build workloads that are statically stable and operate in only one mode. In this case, provision enough instances in each Availability Zone to handle the workload load if one AZ were removed and then use Elastic Load Balancing or Amazon Route 53 health checks to shift load away from the impaired instances.
 >
 > https://d1.awsstatic.com/whitepapers/architecture/AWS-Reliability-Pillar.pdf says:
+>
 > **Test disaster recovery implementation to validate the implementation**: Regularly test failover to DR to
 ensure that RTO and RPO are met.
 >
