@@ -83,6 +83,22 @@ When it comes to multi-region deployment, you may think about *primary* and *sec
 
 Let's use all of the available queues all the time and stop sending requests to an unavailable queue until it recovers. You can have the confidence that your system always works with all of the available queues.
 
+AWS recommends this patterns in Well-Architected Framework.
+> https://wa.aws.amazon.com/wat.question.REL_11.en.html says:
+> Use static stability to prevent bimodal behavior: Bimodal behavior is when your workload exhibits different behavior under normal and failure modes, for example, relying on launching new instances if an Availability Zone fails. You should instead build workloads that are statically stable and operate in only one mode. In this case, provision enough instances in each Availability Zone to handle the workload load if one AZ were removed and then use Elastic Load Balancing or Amazon Route 53 health checks to shift load away from the impaired instances.
+>
+> https://d1.awsstatic.com/whitepapers/architecture/AWS-Reliability-Pillar.pdf says:
+> **Test disaster recovery implementation to validate the implementation**: Regularly test failover to DR to
+ensure that RTO and RPO are met.
+>
+> A pattern to avoid is developing recovery paths that are rarely executed. For example, you might have a secondary data store that is used for read-only queries.
+> When you write to a data store and the primary fails, you might want to fail over to the secondary data store.
+> If you don’t frequently test this failover, you might find that your assumptions about the capabilities of the secondary data store are incorrect.
+> The capacity of the secondary, which might have been sufficient when you last tested, may be no longer be able to tolerate the load under this scenario.
+> Our experience has shown that the only error recovery that works is the path you test frequently. This is why having a small number of recovery paths is best.
+> You can establish recovery patterns and regularly test them. If you have a complex or critical recovery path, you still need to regularly execute that failure in production to convince yourself that the recovery path works.
+> In the example we just discussed, you should fail over to the standby regularly, regardless of need.
+
 ## Status
 
 Since I've added API that I needed to this library, it is not completed but still useful.
