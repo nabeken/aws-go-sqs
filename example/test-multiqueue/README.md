@@ -57,26 +57,27 @@ curl "http://127.0.0.1:9003/?index=0&duration=5m&error_rate=0.8" | jq -r .
 
 ```sh
 run_mq_test() {
+  # start
   echo "$(date) Start"
   sleep 120
 
   echo "$(date) 80% error rate for queue 1 for 3m"
-  curl "http://127.0.0.1:9003/?index=0&duration=3m&error_rate=0.8" | jq -r .
+  curl -sSL "http://127.0.0.1:9003/?index=0&duration=3m&error_rate=0.8" | jq -r .
   sleep 180
 
   # wait for 60 seconds to converge
   sleep 60
 
   echo "$(date) 80% error rate for queue 2 for 3m"
-  curl "http://127.0.0.1:9003/?index=1&duration=3m&error_rate=0.8" | jq -r .
+  curl -sSL "http://127.0.0.1:9003/?index=1&duration=3m&error_rate=0.8" | jq -r .
   sleep 180
 
   # wait for 30 seconds
   sleep 30
 
   echo "$(date) 80% error rate for queue 1 and 2 for 3m"
-  curl "http://127.0.0.1:9003/?index=0&duration=3m&error_rate=0.8" | jq -r .
-  curl "http://127.0.0.1:9003/?index=1&duration=3m&error_rate=0.8" | jq -r .
+  curl -sSL "http://127.0.0.1:9003/?index=0&duration=3m&error_rate=0.8" | jq -r .
+  curl -sSL "http://127.0.0.1:9003/?index=1&duration=3m&error_rate=0.8" | jq -r .
   sleep 120
 }
 
