@@ -75,9 +75,9 @@ run_mq_test() {
   # wait for 30 seconds
   sleep 30
 
-  echo "$(date) 80% error rate for queue 1 and 2 for 3m"
+  echo "$(date) 80% error rate for queue 1 and 2 for 3m and 4m"
   curl -sSL "http://127.0.0.1:9003/?index=0&duration=3m&error_rate=0.8" | jq -r .
-  curl -sSL "http://127.0.0.1:9003/?index=1&duration=3m&error_rate=0.8" | jq -r .
+  curl -sSL "http://127.0.0.1:9003/?index=1&duration=4m&error_rate=0.8" | jq -r .
   sleep 120
 }
 
