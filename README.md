@@ -7,7 +7,7 @@
 
 # Usage
 
-`v3` and later requires Go Modules support to import.
+`v3` and later require Go Modules support to import this package.
 ```go
 import "github.com/nabeken/aws-go-sqs/v3/queue"
 ```
