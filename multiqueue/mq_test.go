@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/mercari/go-circuitbreaker"
-	"github.com/nabeken/aws-go-sqs/queue"
+	"github.com/nabeken/aws-go-sqs/v3/queue"
 	"github.com/stretchr/testify/assert"
 )
 
