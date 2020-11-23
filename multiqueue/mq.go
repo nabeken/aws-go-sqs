@@ -18,8 +18,6 @@ type Dispatcher struct {
 	cb            map[string]*circuitbreaker.CircuitBreaker
 	onStateChange func(q *queue.Queue, oldState, newState circuitbreaker.State)
 
-	monitor *monitor
-
 	rand *rand.Rand
 
 	// protect queues
@@ -54,7 +52,6 @@ func New(cbOpts *circuitbreaker.Options, queues ...*queue.Queue) *Dispatcher {
 	}
 
 	d.buildCircuitBreaker(cbOpts)
-	d.buildMonitor()
 
 	return d
 }
@@ -79,15 +76,12 @@ func (d *Dispatcher) buildCircuitBreaker(opts *circuitbreaker.Options) {
 			ShouldTrip:            opts.ShouldTrip,
 			FailOnContextCancel:   opts.FailOnContextCancel,
 			FailOnContextDeadline: opts.FailOnContextDeadline,
+			OnStateChange: func(from, to circuitbreaker.State) {
+				d.handleStateChange(q, from, to)
+			},
 		})
 	}
 	d.cb = cb
-}
-
-func (d *Dispatcher) buildMonitor() {
-	mon := &monitor{d: d}
-	mon.initState()
-	d.monitor = mon
 }
 
 func (d *Dispatcher) markUnavailable(q *queue.Queue) {
@@ -176,57 +170,6 @@ func (d *Dispatcher) dispatch(q *queue.Queue) *Executor {
 	return &Executor{
 		Queue: q,
 		cb:    d.cb[*q.URL],
-	}
-}
-
-// StartStateMonitor starts the state monitor and it will be blocked until ctx is canceled.
-func (d *Dispatcher) StartStateMonitor(ctx context.Context) {
-	d.monitor.start(ctx)
-}
-
-type monitor struct {
-	d *Dispatcher
-
-	mu       sync.Mutex
-	curState map[string]circuitbreaker.State
-}
-
-func (m *monitor) initState() {
-	m.curState = make(map[string]circuitbreaker.State)
-
-	for k, cb := range m.d.cb {
-		m.curState[k] = cb.State()
-		//log.Printf("%s: init %s", n, m.curState[n])
-	}
-}
-
-func (m *monitor) start(ctx context.Context) {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			for _, q := range m.d.queues {
-				m.checkState(q)
-			}
-		}
-	}
-}
-
-func (m *monitor) checkState(q *queue.Queue) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	k := *q.URL
-	prev := m.curState[k]
-	cur := m.d.cb[k].State()
-
-	if prev != cur {
-		m.d.handleStateChange(q, prev, cur)
-		m.curState[k] = cur
 	}
 }
 

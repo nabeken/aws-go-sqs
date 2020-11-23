@@ -33,7 +33,7 @@ func TestDispatcher(t *testing.T) {
 			assert.Equal(q, d.avail[0])
 		}
 
-		assert.Equal(circuitbreaker.StateClosed, d.monitor.curState["dummy"])
+		assert.Equal(circuitbreaker.StateClosed, d.cb["dummy"].State())
 	})
 
 	t.Run("dispatch queue", func(t *testing.T) {
@@ -43,11 +43,6 @@ func TestDispatcher(t *testing.T) {
 		d.WithOnStateChange(func(q *queue.Queue, oldState, newState circuitbreaker.State) {
 			stateChanged = true
 		})
-
-		go func() { d.StartStateMonitor(context.TODO()) }()
-
-		t.Log("waiting for monitor")
-		time.Sleep(1 * time.Second)
 
 		{
 			dq := d.Dispatch()
@@ -62,11 +57,11 @@ func TestDispatcher(t *testing.T) {
 			assert.EqualError(err, givenErr.Error())
 		}
 
-		t.Log("waiting for monitor to detect the state change")
+		t.Log("waiting for the state change")
 		time.Sleep(2 * time.Second)
 
 		assert.True(stateChanged, "the state should be changed")
-		assert.Equal(circuitbreaker.StateOpen, d.monitor.curState["dummy"])
+		assert.Equal(circuitbreaker.StateOpen, d.cb["dummy"].State())
 
 		{
 			assert.Len(d.queues, 1)
@@ -80,7 +75,7 @@ func TestDispatcher(t *testing.T) {
 
 		t.Log("waiting for the circuit to be half-open")
 		time.Sleep(5 * time.Second)
-		assert.Equal(circuitbreaker.StateHalfOpen, d.monitor.curState["dummy"])
+		assert.Equal(circuitbreaker.StateHalfOpen, d.cb["dummy"].State())
 	})
 }
 
@@ -96,12 +91,10 @@ func TestDispatcher_DispatchByRR(t *testing.T) {
 		&queue.Queue{URL: aws.String("dummy2")},
 	)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go func() { d.StartStateMonitor(ctx) }()
-
-	t.Log("waiting for monitor")
+	t.Log("waiting for the state change")
 	time.Sleep(1 * time.Second)
 
 	assert := assert.New(t)
