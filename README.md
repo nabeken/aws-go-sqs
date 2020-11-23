@@ -1,5 +1,6 @@
 # aws-go-sqs
 
+![Go](https://github.com/nabeken/aws-go-sqs/workflows/Go/badge.svg)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/nabeken/aws-go-sqs/v3)](https://pkg.go.dev/github.com/nabeken/aws-go-sqs/v3)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
