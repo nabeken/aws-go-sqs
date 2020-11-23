@@ -100,11 +100,11 @@ ensure that RTO and RPO are met.
 > You can establish recovery patterns and regularly test them. If you have a complex or critical recovery path, you still need to regularly execute that failure in production to convince yourself that the recovery path works.
 > In the example we just discussed, you should fail over to the standby regularly, regardless of need.
 
-## Example
+# Example
 
 See examples in [GoDoc](http://godoc.org/github.com/nabeken/aws-go-sqs/queue#pkg-examples).
 
-## Testing
+# Testing
 
 We have some integration tests in `queue/queue_test.go`.
 
