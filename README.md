@@ -9,7 +9,7 @@
 
 `v3` and later requires Go Modules support to import.
 ```go
-import https://github.com/nabeken/aws-go-sqs/v3/queue
+import "github.com/nabeken/aws-go-sqs/v3/queue"
 ```
 
 From v3 train (and `master` branch), we no longer use `gopkg.in`.
