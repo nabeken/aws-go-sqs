@@ -86,12 +86,6 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		d.StartStateMonitor(ctx)
-	}()
-
 	execs := d.GetExecutors()
 	messagesCh := make(chan []string, *concurrency*len(execs))
 
