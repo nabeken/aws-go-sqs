@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/nabeken/aws-go-sqs/queue/option"
+	"github.com/nabeken/aws-go-sqs/v3/queue/option"
 )
 
 // A Queue is an SQS queue which holds queue url in URL.
@@ -17,7 +17,7 @@ type Queue struct {
 	URL *string
 }
 
-// New initializes Queue with queue name name.
+// New initializes Queue with name.
 func New(s sqsiface.SQSAPI, name string) (*Queue, error) {
 	u, err := GetQueueURL(s, name)
 	if err != nil {
@@ -28,6 +28,16 @@ func New(s sqsiface.SQSAPI, name string) (*Queue, error) {
 		SQS: s,
 		URL: u,
 	}, nil
+}
+
+// MustNew initializes Queue with name.
+// It will panic when it fails to initialize a queue.
+func MustNew(s sqsiface.SQSAPI, name string) *Queue {
+	q, err := New(s, name)
+	if err != nil {
+		panic(err)
+	}
+	return q
 }
 
 // ChangeMessageVisibility changes a message visibiliy timeout.

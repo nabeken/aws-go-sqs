@@ -1,21 +1,21 @@
 # aws-go-sqs
 
 [![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/nabeken/aws-go-sqs/queue)
-[![Build Status](https://img.shields.io/travis/nabeken/aws-go-sqs/master.svg)](https://travis-ci.org/nabeken/aws-go-sqs)
-[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/nabeken/aws-go-sqs/blob/master/LICENSE)
+[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-aws-go-sqs is a SQS library built with [aws/aws-sdk-go](https://github.com/aws/aws-sdk-go).
+`aws-go-sqs` is a SQS wrapper library for [aws/aws-sdk-go](https://github.com/aws/aws-sdk-go).
 
-# Versions
+# Usage
 
-From v3 train (and `master` branch), we no longer use `gopkg.in` but will tag each release by following semver.
+`v3` and later requires Go Modules support to import.
+```go
+import https://github.com/nabeken/aws-go-sqs/v3/queue
+```
+
+From v3 train (and `master` branch), we no longer use `gopkg.in`.
 
 - We have [v1 branch](https://github.com/nabeken/aws-go-sqs/tree/v1) so you can import it from `gopkg.in/nabeken/aws-go-sqs.v1`.
 - We have [v2 branch](https://github.com/nabeken/aws-go-sqs/tree/v2) so you can import it from `gopkg.in/nabeken/aws-go-sqs.v2`.
-
-## Status
-
-Since I've add API that I needed to this library, it is not completed but still useful.
 
 ## Example
 
