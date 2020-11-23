@@ -1,6 +1,6 @@
 # aws-go-sqs
 
-[![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/nabeken/aws-go-sqs/queue)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/nabeken/aws-go-sqs/v3)](https://pkg.go.dev/github.com/nabeken/aws-go-sqs/v3)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 `aws-go-sqs` is a SQS wrapper library for [aws/aws-sdk-go](https://github.com/aws/aws-sdk-go).
@@ -99,10 +99,6 @@ ensure that RTO and RPO are met.
 > Our experience has shown that the only error recovery that works is the path you test frequently. This is why having a small number of recovery paths is best.
 > You can establish recovery patterns and regularly test them. If you have a complex or critical recovery path, you still need to regularly execute that failure in production to convince yourself that the recovery path works.
 > In the example we just discussed, you should fail over to the standby regularly, regardless of need.
-
-# Example
-
-See examples in [GoDoc](http://godoc.org/github.com/nabeken/aws-go-sqs/queue#pkg-examples).
 
 # Testing
 
