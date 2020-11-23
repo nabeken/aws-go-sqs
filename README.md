@@ -14,11 +14,6 @@ import "github.com/nabeken/aws-go-sqs/v3/queue"
 
 From v3 train (and `master` branch), we no longer use `gopkg.in`.
 
-Import path for v3:
-```go
-import "github.com/nabeken/aws-go-sqs"
-```
-
 - We have [v1 branch](https://github.com/nabeken/aws-go-sqs/tree/v1) so you can import it from `gopkg.in/nabeken/aws-go-sqs.v1`.
 - We have [v2 branch](https://github.com/nabeken/aws-go-sqs/tree/v2) so you can import it from `gopkg.in/nabeken/aws-go-sqs.v2`.
 
