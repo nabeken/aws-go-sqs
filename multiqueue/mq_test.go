@@ -14,7 +14,7 @@ import (
 
 func TestDispatcher(t *testing.T) {
 	// dummy queue
-	q := &queue.Queue{URL: aws.String("dummy")}
+	q := NewQueue(&queue.Queue{URL: aws.String("dummy")})
 	opts := &circuitbreaker.Options{
 		Interval:    5 * time.Minute,
 		OpenTimeout: 5 * time.Second,
@@ -40,7 +40,7 @@ func TestDispatcher(t *testing.T) {
 		assert := assert.New(t)
 
 		var stateChanged bool
-		d.WithOnStateChange(func(q *queue.Queue, oldState, newState circuitbreaker.State) {
+		d.WithOnStateChange(func(q *Queue, oldState, newState circuitbreaker.State) {
 			stateChanged = true
 		})
 
@@ -87,8 +87,8 @@ func TestDispatcher_DispatchByRR(t *testing.T) {
 	}
 	d := New(
 		opts,
-		&queue.Queue{URL: aws.String("dummy1")},
-		&queue.Queue{URL: aws.String("dummy2")},
+		NewQueue(&queue.Queue{URL: aws.String("dummy1")}),
+		NewQueue(&queue.Queue{URL: aws.String("dummy2")}),
 	)
 
 	_, cancel := context.WithCancel(context.Background())

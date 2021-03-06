@@ -18,6 +18,15 @@ type Queue struct {
 	w int
 }
 
+func NewQueue(q *queue.Queue) *Queue {
+	return &Queue{Queue: q}
+}
+
+func (q *Queue) Weight(w int) *Queue {
+	q.w = w
+	return q
+}
+
 // Dispatcher manages multiple *Queue instances with circit breaker and dispatches it by random or round-robin.
 // Circuit breaker is installed per queue. Dispatcher doesn't dispatch a queue while the circuit breaker is open.
 type Dispatcher struct {
@@ -44,14 +53,9 @@ func (d *Dispatcher) WithOnStateChange(f func(*Queue, circuitbreaker.State, circ
 }
 
 // New creates a dispatcher with mercari/go-circuitbreaker enabled per queue.
-func New(cbOpts *circuitbreaker.Options, queues_ ...*queue.Queue) *Dispatcher {
-	if len(queues_) == 0 {
+func New(cbOpts *circuitbreaker.Options, queues ...*Queue) *Dispatcher {
+	if len(queues) == 0 {
 		panic("at least one queue is required")
-	}
-
-	queues := make([]*Queue, len(queues_))
-	for i := range queues_ {
-		queues[i] = &Queue{Queue: queues_[i]}
 	}
 
 	avail := make([]*Queue, len(queues))
