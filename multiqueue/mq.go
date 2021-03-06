@@ -11,38 +11,50 @@ import (
 	"github.com/nabeken/aws-go-sqs/v3/queue"
 )
 
-// Dispatcher manages multiple *queue.Queue instances with circit breaker and dispatches it by random or round-robin.
+type Queue struct {
+	*queue.Queue
+
+	// weight
+	w int
+}
+
+// Dispatcher manages multiple *Queue instances with circit breaker and dispatches it by random or round-robin.
 // Circuit breaker is installed per queue. Dispatcher doesn't dispatch a queue while the circuit breaker is open.
 type Dispatcher struct {
 	// circuit breaker for each queue
 	cb            map[string]*circuitbreaker.CircuitBreaker
-	onStateChange func(q *queue.Queue, oldState, newState circuitbreaker.State)
+	onStateChange func(q *Queue, oldState, newState circuitbreaker.State)
 
 	rand *rand.Rand
 
 	// protect queues
 	mu sync.Mutex
 	// all of the registered queues
-	queues []*queue.Queue
+	queues []*Queue
 	// queues believed to be available
-	avail []*queue.Queue
+	avail []*Queue
 	// index to a queue which will be dispatched next
 	nextIndex int
 }
 
 // WithOnStateChange installs a hook which will be invoked when the state of the circuit breaker is changed.
-func (d *Dispatcher) WithOnStateChange(f func(*queue.Queue, circuitbreaker.State, circuitbreaker.State)) *Dispatcher {
+func (d *Dispatcher) WithOnStateChange(f func(*Queue, circuitbreaker.State, circuitbreaker.State)) *Dispatcher {
 	d.onStateChange = f
 	return d
 }
 
 // New creates a dispatcher with mercari/go-circuitbreaker enabled per queue.
-func New(cbOpts *circuitbreaker.Options, queues ...*queue.Queue) *Dispatcher {
-	if len(queues) == 0 {
+func New(cbOpts *circuitbreaker.Options, queues_ ...*queue.Queue) *Dispatcher {
+	if len(queues_) == 0 {
 		panic("at least one queue is required")
 	}
 
-	avail := make([]*queue.Queue, len(queues))
+	queues := make([]*Queue, len(queues_))
+	for i := range queues_ {
+		queues[i] = &Queue{Queue: queues_[i]}
+	}
+
+	avail := make([]*Queue, len(queues))
 	copy(avail, queues)
 
 	d := &Dispatcher{
@@ -84,11 +96,11 @@ func (d *Dispatcher) buildCircuitBreaker(opts *circuitbreaker.Options) {
 	d.cb = cb
 }
 
-func (d *Dispatcher) markUnavailable(q *queue.Queue) {
+func (d *Dispatcher) markUnavailable(q *Queue) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	var newAvail []*queue.Queue
+	var newAvail []*Queue
 	for i := range d.avail {
 		if *q.URL != *d.avail[i].URL {
 			newAvail = append(newAvail, d.avail[i])
@@ -99,7 +111,7 @@ func (d *Dispatcher) markUnavailable(q *queue.Queue) {
 	d.avail = newAvail
 }
 
-func (d *Dispatcher) markAvailable(q *queue.Queue) {
+func (d *Dispatcher) markAvailable(q *Queue) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	for i := range d.avail {
@@ -113,7 +125,7 @@ func (d *Dispatcher) markAvailable(q *queue.Queue) {
 	d.avail = append(d.avail, q)
 }
 
-func (d *Dispatcher) handleStateChange(q *queue.Queue, prev, cur circuitbreaker.State) {
+func (d *Dispatcher) handleStateChange(q *Queue, prev, cur circuitbreaker.State) {
 	if f := d.onStateChange; f != nil {
 		f(q, prev, cur)
 	}
@@ -136,7 +148,7 @@ func (d *Dispatcher) DispatchByRR() *Executor {
 }
 
 // caller of this must hold the lock
-func (d *Dispatcher) dispatchByRR() *queue.Queue {
+func (d *Dispatcher) dispatchByRR() *Queue {
 	if len(d.avail) == 0 {
 		return d.dispatchByRandom()
 	}
@@ -151,7 +163,7 @@ func (d *Dispatcher) dispatchByRR() *queue.Queue {
 }
 
 // caller of this must hold the lock
-func (d *Dispatcher) dispatchByRandom() *queue.Queue {
+func (d *Dispatcher) dispatchByRandom() *Queue {
 	// when there is no available queue, it will choose a queue from all of the registered queues
 	if len(d.avail) > 0 {
 		return d.avail[d.rand.Intn(len(d.avail))]
@@ -166,16 +178,16 @@ func (d *Dispatcher) Dispatch() *Executor {
 	return d.dispatch(d.dispatchByRandom())
 }
 
-func (d *Dispatcher) dispatch(q *queue.Queue) *Executor {
+func (d *Dispatcher) dispatch(q *Queue) *Executor {
 	return &Executor{
 		Queue: q,
 		cb:    d.cb[*q.URL],
 	}
 }
 
-// Executor is a wrapper of *queue.Queue with the circuit breaker.
+// Executor is a wrapper of *Queue with the circuit breaker.
 type Executor struct {
-	*queue.Queue
+	*Queue
 
 	cb *circuitbreaker.CircuitBreaker
 }

@@ -69,7 +69,7 @@ func main() {
 	}
 
 	d := multiqueue.New(cbOpts, q1, q2).
-		WithOnStateChange(func(q *queue.Queue, oldState, newState circuitbreaker.State) {
+		WithOnStateChange(func(q *multiqueue.Queue, oldState, newState circuitbreaker.State) {
 			log.Printf("%s: state has been changed from %s to %s", *q.URL, oldState, newState)
 		})
 
@@ -221,7 +221,7 @@ type failureScenarioServer struct {
 	scenario []failureScenario
 }
 
-func (s *failureScenarioServer) findScenario(q *queue.Queue) (failureScenario, bool) {
+func (s *failureScenarioServer) findScenario(q *multiqueue.Queue) (failureScenario, bool) {
 	for _, sc := range s.scenario {
 		if sc.URL == *q.URL {
 			return sc, true
@@ -230,7 +230,7 @@ func (s *failureScenarioServer) findScenario(q *queue.Queue) (failureScenario, b
 	return failureScenario{}, false
 }
 
-func (s *failureScenarioServer) failureScenario(q *queue.Queue) error {
+func (s *failureScenarioServer) failureScenario(q *multiqueue.Queue) error {
 	sc, found := s.findScenario(q)
 	if !found {
 		return nil
