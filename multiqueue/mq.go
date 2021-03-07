@@ -42,8 +42,7 @@ type Dispatcher struct {
 	queues []*Queue
 	// queues believed to be available
 	avail []*Queue
-	// index to a queue which will be dispatched next
-	nextIndex int
+	wq    *WeightedQueues
 }
 
 // WithOnStateChange installs a hook which will be invoked when the state of the circuit breaker is changed.
@@ -64,6 +63,7 @@ func New(cbOpts *circuitbreaker.Options, queues ...*Queue) *Dispatcher {
 	d := &Dispatcher{
 		queues: queues,
 		avail:  avail,
+		wq:     NewWeightedQueues(avail),
 		rand:   rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 
@@ -111,8 +111,8 @@ func (d *Dispatcher) markUnavailable(q *Queue) {
 		}
 	}
 
-	d.nextIndex = 0
 	d.avail = newAvail
+	d.wq = NewWeightedQueues(d.avail)
 }
 
 func (d *Dispatcher) markAvailable(q *Queue) {
@@ -125,8 +125,8 @@ func (d *Dispatcher) markAvailable(q *Queue) {
 		}
 	}
 
-	d.nextIndex = 0
 	d.avail = append(d.avail, q)
+	d.wq = NewWeightedQueues(d.avail)
 }
 
 func (d *Dispatcher) handleStateChange(q *Queue, prev, cur circuitbreaker.State) {
@@ -157,13 +157,7 @@ func (d *Dispatcher) dispatchByRR() *Queue {
 		return d.dispatchByRandom()
 	}
 
-	if d.nextIndex >= len(d.avail) {
-		d.nextIndex = 0
-	}
-
-	i := d.nextIndex
-	d.nextIndex++
-	return d.avail[i]
+	return d.wq.Next()
 }
 
 // caller of this must hold the lock
@@ -199,4 +193,93 @@ type Executor struct {
 // Do allows you to call req under the circuit breaker.
 func (e *Executor) Do(ctx context.Context, req func() (interface{}, error)) (interface{}, error) {
 	return e.cb.Do(ctx, req)
+}
+
+// maxWeight returns a maxium weight in the given queues.
+func maxWeight(queues []*Queue) int {
+	if len(queues) == 0 {
+		return 0
+	}
+
+	w := queues[0].w
+	for i := range queues[1:] {
+		if nw := queues[i].w; nw > w {
+			w = nw
+		}
+	}
+	return w
+}
+
+// WeightedQueues represents the Interleaved Weighted Round-Robin algorithm.
+// See https://en.wikipedia.org/wiki/Weighted_round_robin#Interleaved_WRR
+type WeightedQueues struct {
+	q []*Queue
+
+	mu        sync.Mutex
+	maxWeight int
+	round     int
+	nextIndex int
+}
+
+func NewWeightedQueues(q []*Queue) *WeightedQueues {
+	// if there is no weight in the given queues,
+	// it will set the same weight to all the queues
+	var foundNonZero bool
+	for i := range q {
+		if q[i].w > 0 {
+			foundNonZero = true
+		}
+	}
+	if !foundNonZero {
+		for i := range q {
+			q[i].w = 1
+		}
+	}
+
+	return &WeightedQueues{
+		q: q,
+
+		maxWeight: maxWeight(q),
+	}
+}
+
+// Next returns a next queue and updates the internal state.
+func (wq *WeightedQueues) Next() *Queue {
+	wq.mu.Lock()
+	defer wq.mu.Unlock()
+
+AGAIN:
+	for wq.round < wq.maxWeight {
+		for wq.nextIndex < len(wq.q) {
+			n := wq.nextIndex
+			wq.nextIndex++
+
+			// FIXME:
+			//fmt.Printf("DEBUG: maxWeight: %d, round: %d, index: %d, weight[%d]: %d, nextIndex: %d\n",
+			//	wq.maxWeight,
+			//	wq.round,
+			//	n,
+			//	n,
+			//	wq.q[n].w,
+			//	wq.nextIndex,
+			//)
+
+			if wq.q[n].w > wq.round {
+				return wq.q[n]
+			}
+		}
+		if wq.nextIndex >= len(wq.q) {
+			wq.round++
+			wq.nextIndex = 0
+		}
+	}
+	if wq.round >= wq.maxWeight {
+		wq.round = 0
+	}
+
+	// go to the for-loop again since round is wrapped
+
+	goto AGAIN
+
+	panic("not reachable")
 }
