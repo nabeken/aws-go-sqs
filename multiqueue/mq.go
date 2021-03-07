@@ -222,15 +222,8 @@ type WeightedQueues struct {
 }
 
 func NewWeightedQueues(q []*Queue) *WeightedQueues {
-	// if there is no weight in the given queues,
-	// it will set the same weight to all the queues
-	var foundNonZero bool
-	for i := range q {
-		if q[i].w > 0 {
-			foundNonZero = true
-		}
-	}
-	if !foundNonZero {
+	max := maxWeight(q)
+	if max == 0 {
 		for i := range q {
 			q[i].w = 1
 		}
