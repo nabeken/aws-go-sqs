@@ -26,8 +26,12 @@ import (
 func main() {
 	var queueName1 = flag.String("queue1", "", "specify SQS queue name 1")
 	var region1 = flag.String("region1", "ap-northeast-1", "specify a region for queue1")
+	var weight1 = flag.Int("weight1", 1, "specify a weight for queue1")
+
 	var queueName2 = flag.String("queue2", "", "specify SQS queue name 2")
 	var region2 = flag.String("region2", "ap-southeast-1", "specify a region for queue2")
+	var weight2 = flag.Int("weight2", 1, "specify a weight for queue2")
+
 	var drain = flag.Bool("drain", false, "drain")
 	var concurrency = flag.Int("concurrency", 1, "specify concurrency")
 	var count = flag.Int("count", 10000, "number of messages")
@@ -59,8 +63,8 @@ func main() {
 	})))
 
 	// Create Queue instance
-	q1 := queue.MustNew(s1, *queueName1)
-	q2 := queue.MustNew(s2, *queueName2)
+	q1 := multiqueue.NewQueue(queue.MustNew(s1, *queueName1)).Weight(*weight1)
+	q2 := multiqueue.NewQueue(queue.MustNew(s2, *queueName2)).Weight(*weight2)
 
 	// if we do not set OpenTimeout nor OpenBackOff, the default value of OpenBackOff will be used.
 	cbOpts := &circuitbreaker.Options{
@@ -148,7 +152,7 @@ LOOP:
 		go func() {
 			defer func() { <-sem }()
 			for {
-				exec := d.Dispatch()
+				exec := d.DispatchByRR()
 				_, err := exec.Do(ctx, func() (interface{}, error) {
 					if err := fss.failureScenario(exec.Queue); err != nil {
 						time.Sleep(100 * time.Millisecond)
