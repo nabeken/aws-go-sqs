@@ -11,43 +11,59 @@ import (
 	"github.com/nabeken/aws-go-sqs/v3/queue"
 )
 
-// Dispatcher manages multiple *queue.Queue instances with circit breaker and dispatches it by random or round-robin.
+type Queue struct {
+	*queue.Queue
+
+	// weight
+	w int
+}
+
+func NewQueue(q *queue.Queue) *Queue {
+	return &Queue{Queue: q}
+}
+
+func (q *Queue) Weight(w int) *Queue {
+	q.w = w
+	return q
+}
+
+// Dispatcher manages multiple *Queue instances with circit breaker and dispatches it by random or round-robin.
 // Circuit breaker is installed per queue. Dispatcher doesn't dispatch a queue while the circuit breaker is open.
 type Dispatcher struct {
 	// circuit breaker for each queue
 	cb            map[string]*circuitbreaker.CircuitBreaker
-	onStateChange func(q *queue.Queue, oldState, newState circuitbreaker.State)
+	onStateChange func(q *Queue, oldState, newState circuitbreaker.State)
 
 	rand *rand.Rand
 
 	// protect queues
 	mu sync.Mutex
 	// all of the registered queues
-	queues []*queue.Queue
+	queues []*Queue
 	// queues believed to be available
-	avail []*queue.Queue
-	// index to a queue which will be dispatched next
-	nextIndex int
+	avail []*Queue
+	wq    *WeightedQueues
 }
 
 // WithOnStateChange installs a hook which will be invoked when the state of the circuit breaker is changed.
-func (d *Dispatcher) WithOnStateChange(f func(*queue.Queue, circuitbreaker.State, circuitbreaker.State)) *Dispatcher {
+func (d *Dispatcher) WithOnStateChange(f func(*Queue, circuitbreaker.State, circuitbreaker.State)) *Dispatcher {
 	d.onStateChange = f
 	return d
 }
 
 // New creates a dispatcher with mercari/go-circuitbreaker enabled per queue.
-func New(cbOpts *circuitbreaker.Options, queues ...*queue.Queue) *Dispatcher {
+func New(cbOpts *circuitbreaker.Options, queues ...*Queue) *Dispatcher {
 	if len(queues) == 0 {
 		panic("at least one queue is required")
 	}
 
-	avail := make([]*queue.Queue, len(queues))
+	avail := make([]*Queue, len(queues))
 	copy(avail, queues)
 
 	d := &Dispatcher{
 		queues: queues,
 		avail:  avail,
+		wq:     NewWeightedQueues(avail),
 		rand:   rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 
@@ -84,22 +100,22 @@ func (d *Dispatcher) buildCircuitBreaker(opts *circuitbreaker.Options) {
 	d.cb = cb
 }
 
-func (d *Dispatcher) markUnavailable(q *queue.Queue) {
+func (d *Dispatcher) markUnavailable(q *Queue) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	var newAvail []*queue.Queue
+	var newAvail []*Queue
 	for i := range d.avail {
 		if *q.URL != *d.avail[i].URL {
 			newAvail = append(newAvail, d.avail[i])
 		}
 	}
 
-	d.nextIndex = 0
 	d.avail = newAvail
+	d.wq = NewWeightedQueues(d.avail)
 }
 
-func (d *Dispatcher) markAvailable(q *queue.Queue) {
+func (d *Dispatcher) markAvailable(q *Queue) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	for i := range d.avail {
@@ -109,11 +125,11 @@ func (d *Dispatcher) markAvailable(q *queue.Queue) {
 		}
 	}
 
-	d.nextIndex = 0
 	d.avail = append(d.avail, q)
+	d.wq = NewWeightedQueues(d.avail)
 }
 
-func (d *Dispatcher) handleStateChange(q *queue.Queue, prev, cur circuitbreaker.State) {
+func (d *Dispatcher) handleStateChange(q *Queue, prev, cur circuitbreaker.State) {
 	if f := d.onStateChange; f != nil {
 		f(q, prev, cur)
 	}
@@ -136,22 +152,16 @@ func (d *Dispatcher) DispatchByRR() *Executor {
 }
 
 // caller of this must hold the lock
-func (d *Dispatcher) dispatchByRR() *queue.Queue {
+func (d *Dispatcher) dispatchByRR() *Queue {
 	if len(d.avail) == 0 {
 		return d.dispatchByRandom()
 	}
 
-	if d.nextIndex >= len(d.avail) {
-		d.nextIndex = 0
-	}
-
-	i := d.nextIndex
-	d.nextIndex++
-	return d.avail[i]
+	return d.wq.Next()
 }
 
 // caller of this must hold the lock
-func (d *Dispatcher) dispatchByRandom() *queue.Queue {
+func (d *Dispatcher) dispatchByRandom() *Queue {
 	// when there is no available queue, it will choose a queue from all of the registered queues
 	if len(d.avail) > 0 {
 		return d.avail[d.rand.Intn(len(d.avail))]
@@ -166,16 +176,16 @@ func (d *Dispatcher) Dispatch() *Executor {
 	return d.dispatch(d.dispatchByRandom())
 }
 
-func (d *Dispatcher) dispatch(q *queue.Queue) *Executor {
+func (d *Dispatcher) dispatch(q *Queue) *Executor {
 	return &Executor{
 		Queue: q,
 		cb:    d.cb[*q.URL],
 	}
 }
 
-// Executor is a wrapper of *queue.Queue with the circuit breaker.
+// Executor is a wrapper of *Queue with the circuit breaker.
 type Executor struct {
-	*queue.Queue
+	*Queue
 
 	cb *circuitbreaker.CircuitBreaker
 }
@@ -183,4 +193,86 @@ type Executor struct {
 // Do allows you to call req under the circuit breaker.
 func (e *Executor) Do(ctx context.Context, req func() (interface{}, error)) (interface{}, error) {
 	return e.cb.Do(ctx, req)
+}
+
+// maxWeight returns a maxium weight in the given queues.
+func maxWeight(queues []*Queue) int {
+	if len(queues) == 0 {
+		return 0
+	}
+
+	w := queues[0].w
+	for i := range queues[1:] {
+		if nw := queues[i].w; nw > w {
+			w = nw
+		}
+	}
+	return w
+}
+
+// WeightedQueues represents the Interleaved Weighted Round-Robin algorithm.
+// See https://en.wikipedia.org/wiki/Weighted_round_robin#Interleaved_WRR
+type WeightedQueues struct {
+	q []*Queue
+
+	mu        sync.Mutex
+	maxWeight int
+	round     int
+	nextIndex int
+}
+
+func NewWeightedQueues(q []*Queue) *WeightedQueues {
+	max := maxWeight(q)
+	if max == 0 {
+		for i := range q {
+			q[i].w = 1
+		}
+	}
+
+	return &WeightedQueues{
+		q: q,
+
+		maxWeight: maxWeight(q),
+	}
+}
+
+// Next returns a next queue and updates the internal state.
+func (wq *WeightedQueues) Next() *Queue {
+	wq.mu.Lock()
+	defer wq.mu.Unlock()
+
+AGAIN:
+	for wq.round < wq.maxWeight {
+		for wq.nextIndex < len(wq.q) {
+			n := wq.nextIndex
+			wq.nextIndex++
+
+			// FIXME:
+			//fmt.Printf("DEBUG: maxWeight: %d, round: %d, index: %d, weight[%d]: %d, nextIndex: %d\n",
+			//	wq.maxWeight,
+			//	wq.round,
+			//	n,
+			//	n,
+			//	wq.q[n].w,
+			//	wq.nextIndex,
+			//)
+
+			if wq.q[n].w > wq.round {
+				return wq.q[n]
+			}
+		}
+		if wq.nextIndex >= len(wq.q) {
+			wq.round++
+			wq.nextIndex = 0
+		}
+	}
+	if wq.round >= wq.maxWeight {
+		wq.round = 0
+	}
+
+	// go to the for-loop again since round is wrapped
+
+	goto AGAIN
+
+	panic("not reachable")
 }

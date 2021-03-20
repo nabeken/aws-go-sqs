@@ -14,7 +14,7 @@ import (
 
 func TestDispatcher(t *testing.T) {
 	// dummy queue
-	q := &queue.Queue{URL: aws.String("dummy")}
+	q := NewQueue(testDummyQueue("dummy"))
 	opts := &circuitbreaker.Options{
 		Interval:    5 * time.Minute,
 		OpenTimeout: 5 * time.Second,
@@ -40,7 +40,7 @@ func TestDispatcher(t *testing.T) {
 		assert := assert.New(t)
 
 		var stateChanged bool
-		d.WithOnStateChange(func(q *queue.Queue, oldState, newState circuitbreaker.State) {
+		d.WithOnStateChange(func(q *Queue, oldState, newState circuitbreaker.State) {
 			stateChanged = true
 		})
 
@@ -87,8 +87,8 @@ func TestDispatcher_DispatchByRR(t *testing.T) {
 	}
 	d := New(
 		opts,
-		&queue.Queue{URL: aws.String("dummy1")},
-		&queue.Queue{URL: aws.String("dummy2")},
+		NewQueue(testDummyQueue("dummy1")),
+		NewQueue(testDummyQueue("dummy2")),
 	)
 
 	_, cancel := context.WithCancel(context.Background())
@@ -102,4 +102,48 @@ func TestDispatcher_DispatchByRR(t *testing.T) {
 	assert.Equal(d.queues[1], d.DispatchByRR().Queue)
 	assert.Equal(d.queues[0], d.DispatchByRR().Queue)
 	assert.Equal(d.queues[1], d.DispatchByRR().Queue)
+}
+
+func TestMaxWeight(t *testing.T) {
+	assert.Equal(t, 5, maxWeight([]*Queue{&Queue{w: 1}, &Queue{w: 5}, &Queue{w: 2}}))
+}
+
+func TestWeightedQueues(t *testing.T) {
+	wq := NewWeightedQueues([]*Queue{
+		&Queue{w: 1, Queue: testDummyQueue("dummy1")},
+		&Queue{w: 5, Queue: testDummyQueue("dummy2")},
+		&Queue{w: 2, Queue: testDummyQueue("dummy3")},
+	})
+
+	for i := 0; i < 3; i++ {
+		for _, expected := range []string{
+			// round 0
+			"dummy1",
+			"dummy2",
+			"dummy3",
+
+			// round 1
+			"dummy2",
+			"dummy3",
+
+			// round 2
+			"dummy2",
+
+			// round 3
+			"dummy2",
+
+			// round 4
+			"dummy2",
+		} {
+			assertQueue(t, expected, wq.Next())
+		}
+	}
+}
+
+func testDummyQueue(qn string) *queue.Queue {
+	return &queue.Queue{URL: aws.String(qn)}
+}
+
+func assertQueue(t *testing.T, expected string, q *Queue) bool {
+	return assert.Equal(t, expected, *q.URL)
 }
