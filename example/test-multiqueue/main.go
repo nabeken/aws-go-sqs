@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -54,12 +55,37 @@ func main() {
 		cancel()
 	}()
 
+	tr := &http.Transport{
+		MaxIdleConns:        *concurrency * 2,
+		MaxIdleConnsPerHost: *concurrency * 2,
+
+		MaxConnsPerHost: *concurrency * 2,
+
+		IdleConnTimeout:       30 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+
+		ForceAttemptHTTP2: true,
+	}
+
+	httpClient := &http.Client{
+		Transport: tr,
+		Timeout:   time.Minute,
+	}
+
 	// Create SQS instance for region1
 	s1 := sqs.New(session.Must(session.NewSession(&aws.Config{
-		Region: region1,
+		HTTPClient: httpClient,
+		Region:     region1,
 	})))
 	s2 := sqs.New(session.Must(session.NewSession(&aws.Config{
-		Region: region2,
+		HTTPClient: httpClient,
+		Region:     region2,
 	})))
 
 	// Create Queue instance
