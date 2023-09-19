@@ -67,9 +67,9 @@ func main() {
 	q2 := multiqueue.NewQueue(queue.MustNew(s2, *queueName2)).Weight(*weight2)
 
 	// if we do not set OpenTimeout nor OpenBackOff, the default value of OpenBackOff will be used.
-	cbOpts := &circuitbreaker.Options{
-		Interval:   1 * time.Minute,
-		ShouldTrip: circuitbreaker.NewTripFuncFailureRate(100, 0.7),
+	cbOpts := []circuitbreaker.BreakerOption{
+		circuitbreaker.WithCounterResetInterval(1 * time.Minute),
+		circuitbreaker.WithTripFunc(circuitbreaker.NewTripFuncFailureRate(100, 0.7)),
 	}
 
 	d := multiqueue.New(cbOpts, q1, q2).

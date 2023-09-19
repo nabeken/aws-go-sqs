@@ -52,7 +52,7 @@ func (d *Dispatcher) WithOnStateChange(f func(*Queue, circuitbreaker.State, circ
 }
 
 // New creates a dispatcher with mercari/go-circuitbreaker enabled per queue.
-func New(cbOpts *circuitbreaker.Options, queues ...*Queue) *Dispatcher {
+func New(cbOpts []circuitbreaker.BreakerOption, queues ...*Queue) *Dispatcher {
 	if len(queues) == 0 {
 		panic("at least one queue is required")
 	}
@@ -67,7 +67,7 @@ func New(cbOpts *circuitbreaker.Options, queues ...*Queue) *Dispatcher {
 		rand:   rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 
-	d.buildCircuitBreaker(cbOpts)
+	d.buildCircuitBreaker(cbOpts...)
 
 	return d
 }
@@ -80,22 +80,13 @@ func (d *Dispatcher) GetExecutors() []*Executor {
 	return execs
 }
 
-func (d *Dispatcher) buildCircuitBreaker(opts *circuitbreaker.Options) {
+func (d *Dispatcher) buildCircuitBreaker(opts ...circuitbreaker.BreakerOption) {
 	cb := map[string]*circuitbreaker.CircuitBreaker{}
 	for i := range d.queues {
 		q := d.queues[i]
-		cb[*q.URL] = circuitbreaker.New(&circuitbreaker.Options{
-			Interval:              opts.Interval,
-			OpenTimeout:           opts.OpenTimeout,
-			OpenBackOff:           opts.OpenBackOff,
-			HalfOpenMaxSuccesses:  opts.HalfOpenMaxSuccesses,
-			ShouldTrip:            opts.ShouldTrip,
-			FailOnContextCancel:   opts.FailOnContextCancel,
-			FailOnContextDeadline: opts.FailOnContextDeadline,
-			OnStateChange: func(from, to circuitbreaker.State) {
-				d.handleStateChange(q, from, to)
-			},
-		})
+		cb[*q.URL] = circuitbreaker.New(append(opts, circuitbreaker.WithOnStateChangeHookFn(func(from, to circuitbreaker.State) {
+			d.handleStateChange(q, from, to)
+		}))...)
 	}
 	d.cb = cb
 }

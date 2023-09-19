@@ -15,11 +15,12 @@ import (
 func TestDispatcher(t *testing.T) {
 	// dummy queue
 	q := NewQueue(testDummyQueue("dummy"))
-	opts := &circuitbreaker.Options{
-		Interval:    5 * time.Minute,
-		OpenTimeout: 5 * time.Second,
-		ShouldTrip:  circuitbreaker.NewTripFuncConsecutiveFailures(1),
+	opts := []circuitbreaker.BreakerOption{
+		circuitbreaker.WithCounterResetInterval(5 * time.Minute),
+		circuitbreaker.WithOpenTimeout(5 * time.Second),
+		circuitbreaker.WithTripFunc(circuitbreaker.NewTripFuncConsecutiveFailures(1)),
 	}
+
 	d := New(opts, q)
 
 	t.Run("initial state", func(t *testing.T) {
@@ -80,10 +81,10 @@ func TestDispatcher(t *testing.T) {
 }
 
 func TestDispatcher_DispatchByRR(t *testing.T) {
-	opts := &circuitbreaker.Options{
-		Interval:    5 * time.Minute,
-		OpenTimeout: 5 * time.Second,
-		ShouldTrip:  circuitbreaker.NewTripFuncConsecutiveFailures(1),
+	opts := []circuitbreaker.BreakerOption{
+		circuitbreaker.WithCounterResetInterval(5 * time.Minute),
+		circuitbreaker.WithOpenTimeout(5 * time.Second),
+		circuitbreaker.WithTripFunc(circuitbreaker.NewTripFuncConsecutiveFailures(1)),
 	}
 	d := New(
 		opts,
