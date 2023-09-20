@@ -26,13 +26,13 @@ Usage of ./test-multiqueue:
 
 ## Example
 
-Send 100,0000 messages to queues in ap-northeast-1 and ap-southeast-1 and receive the messages from the both queues:
+Send 1,000,000 messages to queues in ap-northeast-1 and ap-southeast-1 and receive the messages from the both queues:
 ```sh
 ./test-multiqueue \
   -queue1 example-ap-northeast-1 \
   -queue2 example-ap-southeast-1 \
-  -concurrency 10 \
-  -count 100000
+  -concurrency 50 \
+  -count 1000000
 ```
 
 While the tool is working, you can inject errors via HTTP:
@@ -55,33 +55,6 @@ curl "http://127.0.0.1:9003/?index=0&duration=5m&error_rate=0.8" | jq -r .
 
 # Test scenario
 
-```sh
-run_mq_test() {
-  # start
-  echo "$(date) Start"
-  sleep 120
-
-  echo "$(date) 80% error rate for queue 1 for 3m"
-  curl -sSL "http://127.0.0.1:9003/?index=0&duration=3m&error_rate=0.8" | jq -r .
-  sleep 180
-
-  # wait for 60 seconds to converge
-  sleep 60
-
-  echo "$(date) 80% error rate for queue 2 for 3m"
-  curl -sSL "http://127.0.0.1:9003/?index=1&duration=3m&error_rate=0.8" | jq -r .
-  sleep 180
-
-  # wait for 30 seconds
-  sleep 30
-
-  echo "$(date) 80% error rate for queue 1 and 2 for 3m and 4m"
-  curl -sSL "http://127.0.0.1:9003/?index=0&duration=3m&error_rate=0.8" | jq -r .
-  curl -sSL "http://127.0.0.1:9003/?index=1&duration=4m&error_rate=0.8" | jq -r .
-  sleep 120
-}
-
-run_mq_test
-```
+You can use `t.sh` script in the directory.
 
 Happy testing.
