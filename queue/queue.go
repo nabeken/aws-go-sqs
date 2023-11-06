@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -40,14 +41,19 @@ func MustNew(s sqsiface.SQSAPI, name string) *Queue {
 	return q
 }
 
-// ChangeMessageVisibility changes a message visibiliy timeout.
+// ChangeMessageVisibility wraps ChangeMessageVisibilityWithContext using context.Background.
 func (q *Queue) ChangeMessageVisibility(receiptHandle *string, visibilityTimeout int64) error {
+	return q.ChangeMessageVisibilityWithContext(context.Background(), receiptHandle, visibilityTimeout)
+}
+
+// ChangeMessageVisibilityWithContext changes a message visibiliy timeout.
+func (q *Queue) ChangeMessageVisibilityWithContext(ctx context.Context, receiptHandle *string, visibilityTimeout int64) error {
 	req := &sqs.ChangeMessageVisibilityInput{
 		ReceiptHandle:     receiptHandle,
 		VisibilityTimeout: aws.Int64(visibilityTimeout),
 		QueueUrl:          q.URL,
 	}
-	_, err := q.SQS.ChangeMessageVisibility(req)
+	_, err := q.SQS.ChangeMessageVisibilityWithContext(ctx, req)
 	return err
 }
 
@@ -58,8 +64,13 @@ type BatchChangeMessageVisibility struct {
 	VisibilityTimeout int64
 }
 
-// ChangeMessageVisibilityBatch changes a visibility timeout for each message in opts.
+// ChangeMessageVisibilityBatch wraps ChangeMessageVisibilityBatchWithContext using context.Background.
 func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibility) error {
+	return q.ChangeMessageVisibilityBatchWithContext(context.Background(), opts...)
+}
+
+// ChangeMessageVisibilityBatchWithContext changes a visibility timeout for each message in opts.
+func (q *Queue) ChangeMessageVisibilityBatchWithContext(ctx context.Context, opts ...BatchChangeMessageVisibility) error {
 	entries := make([]*sqs.ChangeMessageVisibilityBatchRequestEntry, len(opts))
 	id2index := make(map[string]int)
 	for i, b := range opts {
@@ -77,15 +88,20 @@ func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibilit
 		QueueUrl: q.URL,
 	}
 
-	resp, err := q.SQS.ChangeMessageVisibilityBatch(req)
+	resp, err := q.SQS.ChangeMessageVisibilityBatchWithContext(ctx, req)
 	if err != nil {
 		return err
 	}
 	return NewBatchError(id2index, resp.Failed)
 }
 
-// SendMessage sends a message to SQS queue. opts are used to change parameters for a message.
+// SendMessage wraps SendMessageWithContext using context.Background.
 func (q *Queue) SendMessage(body string, opts ...option.SendMessageInput) (*sqs.SendMessageOutput, error) {
+	return q.SendMessageWithContext(context.Background(), body, opts...)
+}
+
+// SendMessageWithContext sends a message to an SQS queue. opts are used to change parameters for a message.
+func (q *Queue) SendMessageWithContext(ctx context.Context, body string, opts ...option.SendMessageInput) (*sqs.SendMessageOutput, error) {
 	req := &sqs.SendMessageInput{
 		MessageBody: aws.String(body),
 		QueueUrl:    q.URL,
@@ -95,7 +111,7 @@ func (q *Queue) SendMessage(body string, opts ...option.SendMessageInput) (*sqs.
 		f(req)
 	}
 
-	return q.SQS.SendMessage(req)
+	return q.SQS.SendMessageWithContext(ctx, req)
 }
 
 // A BatchMessage represents each request to send a message.
@@ -157,8 +173,13 @@ func IsBatchError(err error) (errors []*BatchError, ok bool) {
 	return errors, len(errors) > 0
 }
 
-// SendMessageBatch sends messages to SQS queue.
+// SendMessageBatch wraps SendMessageBatchWithContext using context.Background.
 func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
+	return q.SendMessageBatchWithContext(context.Background(), messages...)
+}
+
+// SendMessageBatch sends messages to SQS queue.
+func (q *Queue) SendMessageBatchWithContext(ctx context.Context, messages ...BatchMessage) error {
 	entries, id2index := BuildBatchRequestEntry(messages...)
 
 	req := &sqs.SendMessageBatchInput{
@@ -166,16 +187,21 @@ func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
 		QueueUrl: q.URL,
 	}
 
-	resp, err := q.SQS.SendMessageBatch(req)
+	resp, err := q.SQS.SendMessageBatchWithContext(ctx, req)
 	if err != nil {
 		return err
 	}
 	return NewBatchError(id2index, resp.Failed)
 }
 
+// ReceiveMessage wraps ReceiveMessageWithContext using context.Background.
+func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageInput) ([]*sqs.Message, error) {
+	return q.ReceiveMessageWithContext(context.Background(), opts...)
+}
+
 // ReceiveMessage receives messages from SQS queue.
 // opts are used to change parameters for a request.
-func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageInput) ([]*sqs.Message, error) {
+func (q *Queue) ReceiveMessageWithContext(ctx context.Context, opts ...option.ReceiveMessageInput) ([]*sqs.Message, error) {
 	req := &sqs.ReceiveMessageInput{
 		QueueUrl: q.URL,
 	}
@@ -184,24 +210,34 @@ func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageInput) ([]*sqs.Messa
 		f(req)
 	}
 
-	resp, err := q.SQS.ReceiveMessage(req)
+	resp, err := q.SQS.ReceiveMessageWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	return resp.Messages, nil
 }
 
-// DeleteMessage deletes a message from SQS queue.
+// DeleteMessage wraps DeleteMessageWithContext using context.Background.
 func (q *Queue) DeleteMessage(receiptHandle *string) error {
-	_, err := q.SQS.DeleteMessage(&sqs.DeleteMessageInput{
+	return q.DeleteMessageWithContext(context.Background(), receiptHandle)
+}
+
+// DeleteMessage deletes a message from SQS queue.
+func (q *Queue) DeleteMessageWithContext(ctx context.Context, receiptHandle *string) error {
+	_, err := q.SQS.DeleteMessageWithContext(ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      q.URL,
 		ReceiptHandle: receiptHandle,
 	})
 	return err
 }
 
-// DeleteMessageBatch deletes messages from SQS queue.
+// DeleteMessageBatch wraps DeleteMessageBatchWithContext using context.Background.
 func (q *Queue) DeleteMessageBatch(receiptHandles ...*string) error {
+	return q.DeleteMessageBatchWithContext(context.Background(), receiptHandles...)
+}
+
+// DeleteMessageBatchWithContext deletes messages from SQS queue.
+func (q *Queue) DeleteMessageBatchWithContext(ctx context.Context, receiptHandles ...*string) error {
 	entries := make([]*sqs.DeleteMessageBatchRequestEntry, len(receiptHandles))
 	id2index := make(map[string]int)
 	for i, rh := range receiptHandles {
@@ -218,37 +254,52 @@ func (q *Queue) DeleteMessageBatch(receiptHandles ...*string) error {
 		QueueUrl: q.URL,
 	}
 
-	resp, err := q.SQS.DeleteMessageBatch(req)
+	resp, err := q.SQS.DeleteMessageBatchWithContext(ctx, req)
 	if err != nil {
 		return err
 	}
 	return NewBatchError(id2index, resp.Failed)
 }
 
-// DeleteQueue deletes a queue in SQS.
+// DeleteQueue wraps DeleteQueueWithContext using context.Background.
 func (q *Queue) DeleteQueue() error {
-	_, err := q.SQS.DeleteQueue(&sqs.DeleteQueueInput{
+	return q.DeleteQueueWithContext(context.Background())
+}
+
+// DeleteQueue deletes a queue in SQS.
+func (q *Queue) DeleteQueueWithContext(ctx context.Context) error {
+	_, err := q.SQS.DeleteQueueWithContext(ctx, &sqs.DeleteQueueInput{
 		QueueUrl: q.URL,
 	})
 	return err
+}
+
+// PurgeQueue wraps PurgeQueueWithContext using context.Background.
+func (q *Queue) PurgeQueue() error {
+	return q.PurgeQueueWithContext(context.Background())
 }
 
 // PurgeQueue purges messages in SQS queue.
 // It deletes all messages in SQS queue.
-func (q *Queue) PurgeQueue() error {
-	_, err := q.SQS.PurgeQueue(&sqs.PurgeQueueInput{
+func (q *Queue) PurgeQueueWithContext(ctx context.Context) error {
+	_, err := q.SQS.PurgeQueueWithContext(ctx, &sqs.PurgeQueueInput{
 		QueueUrl: q.URL,
 	})
 	return err
 }
 
-// GetQueueURL returns a URL for the given queue name.
+// GetQueueURL wraps GetQueueURLWithContext using context.Background.
 func GetQueueURL(s sqsiface.SQSAPI, name string) (*string, error) {
+	return GetQueueURLWithContext(context.Background(), s, name)
+}
+
+// GetQueueURLWithContext returns a URL for the given queue name.
+func GetQueueURLWithContext(ctx context.Context, s sqsiface.SQSAPI, name string) (*string, error) {
 	req := &sqs.GetQueueUrlInput{
 		QueueName: aws.String(name),
 	}
 
-	resp, err := s.GetQueueUrl(req)
+	resp, err := s.GetQueueUrlWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
