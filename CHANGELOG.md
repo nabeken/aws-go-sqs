@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.1.1](https://github.com/nabeken/aws-go-sqs/compare/v3.1.0...v3.1.1) (2023-12-10)
+
+
+### Bug Fixes
+
+* **deps:** update actions/setup-go action to v5 ([#49](https://github.com/nabeken/aws-go-sqs/issues/49)) ([74a847b](https://github.com/nabeken/aws-go-sqs/commit/74a847bc1d3a1f3716ef9c058b70916135706a31))
+* **deps:** update module github.com/aws/aws-sdk-go to v1.48.16 ([7e0f1f9](https://github.com/nabeken/aws-go-sqs/commit/7e0f1f92a6f50f7dcce09666723ad0054ca2a2fa))
+* **deps:** update suzuki-shunsuke/github-action-renovate-config-validator action to v1 ([#51](https://github.com/nabeken/aws-go-sqs/issues/51)) ([65d0b85](https://github.com/nabeken/aws-go-sqs/commit/65d0b8569c7bad10be45c2e0bb7d34e34f98e0a4))
+
 ## [3.1.0](https://github.com/nabeken/aws-go-sqs/compare/v3.0.0...v3.1.0) (2023-12-05)
 
 
