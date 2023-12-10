@@ -21,8 +21,7 @@ jobs:
           installation_id: ${{ secrets.release_gh_app_inst_id }}
           private_key: ${{ secrets.release_gh_app_priv_key }}
 
-      - uses: google-github-actions/release-please-action@db8f2c60ee802b3748b512940dde88eabd7b7e01 # v3
+      - uses: google-github-actions/release-please-action@a2d8d683f209466ee8c695cd994ae2cf08b1642d # v4
         with:
           release-type: go
-          package-name: aws-go-sqs
           token: ${{ steps.go-github-apps.outputs.app_github_token }}
