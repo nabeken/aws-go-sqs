@@ -15,13 +15,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/mercari/go-circuitbreaker"
-	"github.com/nabeken/aws-go-sqs/v3/multiqueue"
-	"github.com/nabeken/aws-go-sqs/v3/queue"
-	"github.com/nabeken/aws-go-sqs/v3/queue/option"
+	"github.com/nabeken/aws-go-sqs/v4/multiqueue"
+	"github.com/nabeken/aws-go-sqs/v4/queue"
+	"github.com/nabeken/aws-go-sqs/v4/queue/option"
 )
 
 func main() {
@@ -79,14 +77,15 @@ func main() {
 	}
 
 	// Create SQS instance for region1
-	s1 := sqs.New(session.Must(session.NewSession(&aws.Config{
+	s1 := sqs.New(sqs.Options{
 		HTTPClient: httpClient,
-		Region:     region1,
-	})))
-	s2 := sqs.New(session.Must(session.NewSession(&aws.Config{
+		Region:     *region1,
+	})
+
+	s2 := sqs.New(sqs.Options{
 		HTTPClient: httpClient,
-		Region:     region2,
-	})))
+		Region:     *region2,
+	})
 
 	// Create Queue instance
 	q1 := multiqueue.NewQueue(queue.MustNew(s1, *queueName1)).Weight(*weight1)
@@ -111,7 +110,7 @@ func main() {
 	}
 	go func() {
 		log.Print("starting failure injection HTTP server...")
-		http.ListenAndServe("127.0.0.1:9003", fss)
+		_ = http.ListenAndServe("127.0.0.1:9003", fss)
 	}()
 
 	var wg sync.WaitGroup
@@ -214,11 +213,13 @@ func recv(ctx context.Context, exec *multiqueue.Executor) []string {
 	log.Printf("%s: starting receiver...", *exec.URL)
 
 	var messages []string
+
+LOOP:
 	for {
 		select {
 		case <-ctx.Done():
 			log.Printf("shutting down receiver... count:%d", len(messages))
-			return messages
+			break LOOP
 		default:
 		}
 
@@ -309,5 +310,5 @@ func (s *failureScenarioServer) ServeHTTP(rw http.ResponseWriter, req *http.Requ
 	s.scenario[index].Until = time.Now().Add(dur)
 	s.scenario[index].ErrRate = errRate
 
-	json.NewEncoder(rw).Encode(s.scenario)
+	_ = json.NewEncoder(rw).Encode(s.scenario)
 }

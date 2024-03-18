@@ -3,15 +3,14 @@ package queue_test
 import (
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/nabeken/aws-go-sqs/v3/queue"
-	"github.com/nabeken/aws-go-sqs/v3/queue/option"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/nabeken/aws-go-sqs/v4/queue"
+	"github.com/nabeken/aws-go-sqs/v4/queue/option"
 )
 
 func ExampleQueue_SendMessage() {
 	// Create SQS instance
-	s := sqs.New(session.Must(session.NewSession()))
+	s := sqs.New(sqs.Options{})
 
 	// Create Queue instance
 	q, err := queue.New(s, "example-queue-name")
@@ -34,7 +33,7 @@ func ExampleQueue_SendMessage() {
 
 func ExampleQueue_SendMessageBatch() {
 	// Create SQS instance
-	s := sqs.New(session.Must(session.NewSession()))
+	s := sqs.New(sqs.Options{})
 
 	// Create Queue instance
 	q, err := queue.New(s, "example-queue-name")
@@ -49,10 +48,10 @@ func ExampleQueue_SendMessageBatch() {
 
 	// Create messages for batch operation
 	batchMessages := []queue.BatchMessage{
-		queue.BatchMessage{
+		{
 			Body: "success",
 		},
-		queue.BatchMessage{
+		{
 			Body:    "failed",
 			Options: []option.SendMessageInput{option.MessageAttributes(attrs)},
 		},
