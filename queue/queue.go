@@ -8,37 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/nabeken/aws-go-sqs/v4/internal/sqsiface"
 	"github.com/nabeken/aws-go-sqs/v4/queue/option"
 )
-
-type SQSAPIProvider interface {
-	ChangeMessageVisibility(context.Context, *sqs.ChangeMessageVisibilityInput, ...func(*sqs.Options)) (*sqs.ChangeMessageVisibilityOutput, error)
-	ChangeMessageVisibilityBatch(context.Context, *sqs.ChangeMessageVisibilityBatchInput, ...func(*sqs.Options)) (*sqs.ChangeMessageVisibilityBatchOutput, error)
-
-	SendMessage(context.Context, *sqs.SendMessageInput, ...func(*sqs.Options)) (*sqs.SendMessageOutput, error)
-	SendMessageBatch(context.Context, *sqs.SendMessageBatchInput, ...func(*sqs.Options)) (*sqs.SendMessageBatchOutput, error)
-
-	ReceiveMessage(context.Context, *sqs.ReceiveMessageInput, ...func(*sqs.Options)) (*sqs.ReceiveMessageOutput, error)
-
-	DeleteMessage(context.Context, *sqs.DeleteMessageInput, ...func(*sqs.Options)) (*sqs.DeleteMessageOutput, error)
-	DeleteMessageBatch(context.Context, *sqs.DeleteMessageBatchInput, ...func(*sqs.Options)) (*sqs.DeleteMessageBatchOutput, error)
-
-	DeleteQueue(context.Context, *sqs.DeleteQueueInput, ...func(*sqs.Options)) (*sqs.DeleteQueueOutput, error)
-
-	PurgeQueue(context.Context, *sqs.PurgeQueueInput, ...func(*sqs.Options)) (*sqs.PurgeQueueOutput, error)
-
-	GetQueueUrl(context.Context, *sqs.GetQueueUrlInput, ...func(*sqs.Options)) (*sqs.GetQueueUrlOutput, error)
-}
 
 // A Queue is an SQS queue which holds queue url in URL.
 // Queue allows you to call actions without queue url for every call.
 type Queue struct {
-	SQS SQSAPIProvider
+	SQS sqsiface.SQSAPI
 	URL *string
 }
 
 // New initializes Queue with name.
-func New(s SQSAPIProvider, name string) (*Queue, error) {
+func New(s sqsiface.SQSAPI, name string) (*Queue, error) {
 	u, err := GetQueueURL(s, name)
 	if err != nil {
 		return nil, err
@@ -52,7 +34,7 @@ func New(s SQSAPIProvider, name string) (*Queue, error) {
 
 // MustNew initializes Queue with name.
 // It will panic when it fails to initialize a queue.
-func MustNew(s SQSAPIProvider, name string) *Queue {
+func MustNew(s sqsiface.SQSAPI, name string) *Queue {
 	q, err := New(s, name)
 	if err != nil {
 		panic(err)
@@ -309,12 +291,12 @@ func (q *Queue) PurgeQueueWithContext(ctx context.Context) error {
 }
 
 // GetQueueURL wraps GetQueueURLWithContext using context.Background.
-func GetQueueURL(s SQSAPIProvider, name string) (*string, error) {
+func GetQueueURL(s sqsiface.SQSAPI, name string) (*string, error) {
 	return GetQueueURLWithContext(context.Background(), s, name)
 }
 
 // GetQueueURLWithContext returns a URL for the given queue name.
-func GetQueueURLWithContext(ctx context.Context, s SQSAPIProvider, name string) (*string, error) {
+func GetQueueURLWithContext(ctx context.Context, s sqsiface.SQSAPI, name string) (*string, error) {
 	req := &sqs.GetQueueUrlInput{
 		QueueName: aws.String(name),
 	}
