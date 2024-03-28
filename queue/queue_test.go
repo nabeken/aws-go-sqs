@@ -4,14 +4,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/nabeken/aws-go-sqs/v3/queue/option"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/nabeken/aws-go-sqs/v4/queue/option"
 	"github.com/stretchr/testify/suite"
 )
 
 func testSQSQueue(name string) (*Queue, error) {
-	return New(sqs.New(session.New()), name)
+	return New(sqs.New(sqs.Options{}), name)
 }
 
 type SendMessageBatchSuite struct {
