@@ -1,6 +1,7 @@
 package queue_test
 
 import (
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
@@ -13,7 +14,7 @@ func ExampleQueue_SendMessage() {
 	s := sqs.New(sqs.Options{})
 
 	// Create Queue instance
-	q, err := queue.New(s, "example-queue-name")
+	q, err := queue.New(context.Background(), s, "example-queue-name")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -24,7 +25,7 @@ func ExampleQueue_SendMessage() {
 		"ATTR2": 12345,
 	}
 
-	if _, err := q.SendMessage("MESSAGE BODY", option.MessageAttributes(attrs)); err != nil {
+	if _, err := q.SendMessage(context.Background(), "MESSAGE BODY", option.MessageAttributes(attrs)); err != nil {
 		log.Fatal(err)
 	}
 
@@ -36,7 +37,7 @@ func ExampleQueue_SendMessageBatch() {
 	s := sqs.New(sqs.Options{})
 
 	// Create Queue instance
-	q, err := queue.New(s, "example-queue-name")
+	q, err := queue.New(context.Background(), s, "example-queue-name")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,7 +58,7 @@ func ExampleQueue_SendMessageBatch() {
 		},
 	}
 
-	err = q.SendMessageBatch(batchMessages...)
+	err = q.SendMessageBatch(context.Background(), batchMessages...)
 	if err != nil {
 		batchErrors, ok := queue.IsBatchError(err)
 		if !ok {

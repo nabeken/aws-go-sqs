@@ -37,7 +37,8 @@ func main() {
 
 	flag.Parse()
 
-	rand.Seed(time.Now().UnixNano())
+	randSource := rand.NewSource(time.Now().UnixNano())
+	rng := rand.New(randSource)
 
 	if *queueName1 == "" || *queueName2 == "" {
 		log.Fatal("Please specify queue name")
@@ -88,8 +89,8 @@ func main() {
 	})
 
 	// Create Queue instance
-	q1 := multiqueue.NewQueue(queue.MustNew(s1, *queueName1)).Weight(*weight1)
-	q2 := multiqueue.NewQueue(queue.MustNew(s2, *queueName2)).Weight(*weight2)
+	q1 := multiqueue.NewQueue(queue.MustNew(ctx, s1, *queueName1)).Weight(*weight1)
+	q2 := multiqueue.NewQueue(queue.MustNew(ctx, s2, *queueName2)).Weight(*weight2)
 
 	// if we do not set OpenTimeout nor OpenBackOff, the default value of OpenBackOff will be used.
 	cbOpts := []circuitbreaker.BreakerOption{
@@ -107,6 +108,7 @@ func main() {
 			{URL: *q1.URL},
 			{URL: *q2.URL},
 		},
+		rng: rng,
 	}
 	go func() {
 		log.Print("starting failure injection HTTP server...")
@@ -184,7 +186,7 @@ LOOP:
 						return nil, err
 					}
 
-					return exec.SendMessage(fmt.Sprintf("MESSAGE BODY FROM MULTI-QUEUE %d", cnt), option.MessageAttributes(attrs))
+					return exec.SendMessage(ctx, fmt.Sprintf("MESSAGE BODY FROM MULTI-QUEUE %d", cnt), option.MessageAttributes(attrs))
 				})
 
 				if err != nil {
@@ -224,6 +226,7 @@ LOOP:
 		}
 
 		resp, err := exec.ReceiveMessage(
+			ctx,
 			option.MaxNumberOfMessages(10),
 		)
 		if err != nil {
@@ -231,7 +234,7 @@ LOOP:
 		}
 
 		for _, m := range resp {
-			if err := exec.DeleteMessage(m.ReceiptHandle); err != nil {
+			if err := exec.DeleteMessage(ctx, m.ReceiptHandle); err != nil {
 				log.Printf("unable to delete message: %s", err)
 			}
 			messages = append(messages, *m.Body)
@@ -250,6 +253,7 @@ type failureScenario struct {
 type failureScenarioServer struct {
 	mu       sync.Mutex
 	scenario []failureScenario
+	rng      *rand.Rand
 }
 
 func (s *failureScenarioServer) findScenario(q *multiqueue.Queue) (failureScenario, bool) {
@@ -268,7 +272,7 @@ func (s *failureScenarioServer) failureScenario(q *multiqueue.Queue) error {
 	}
 
 	if time.Now().Before(sc.Until) {
-		if rand.Float64() > sc.ErrRate {
+		if s.rng.Float64() > sc.ErrRate {
 			return nil
 		}
 		return fmt.Errorf("this is a failure scenario until %s", sc.Until.Format(time.RFC3339))
@@ -304,7 +308,7 @@ func (s *failureScenarioServer) ServeHTTP(rw http.ResponseWriter, req *http.Requ
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if index > int64(len(s.scenario))-1 {
-		http.Error(rw, err.Error(), http.StatusBadRequest)
+		http.Error(rw, "index out of bound", http.StatusBadRequest)
 		return
 	}
 	s.scenario[index].Until = time.Now().Add(dur)
