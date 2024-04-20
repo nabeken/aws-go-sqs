@@ -81,9 +81,13 @@ func MessageAttributes(attrs map[string]interface{}) SendMessageInput {
 			return
 		}
 
+		ret := make(map[string]types.MessageAttributeValue)
+
 		for n, v := range attrs {
-			req.MessageAttributes[n] = MessageAttributeValue(v)
+			ret[n] = MessageAttributeValue(v)
 		}
+
+		req.MessageAttributes = ret
 	}
 }
 
