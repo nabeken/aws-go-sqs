@@ -6,6 +6,8 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.31.2
+	github.com/benbjohnson/clock v1.3.5 // indirect
+	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/mercari/go-circuitbreaker v0.0.2
 	github.com/stretchr/testify v1.9.0
@@ -23,8 +25,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.6 // indirect
 	github.com/aws/smithy-go v1.20.2 // indirect
-	github.com/benbjohnson/clock v1.3.5 // indirect
-	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
