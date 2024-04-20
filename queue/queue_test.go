@@ -1,17 +1,17 @@
 package queue
 
 import (
+	"context"
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/nabeken/aws-go-sqs/v3/queue/option"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/nabeken/aws-go-sqs/v4/queue/option"
 	"github.com/stretchr/testify/suite"
 )
 
 func testSQSQueue(name string) (*Queue, error) {
-	return New(sqs.New(session.New()), name)
+	return New(context.Background(), sqs.New(sqs.Options{}), name)
 }
 
 type SendMessageBatchSuite struct {
@@ -42,7 +42,7 @@ func (s *SendMessageBatchSuite) TearDownTest() {
 
 func (s *SendMessageBatchSuite) TearDownSuite() {
 	// don't care of the result but logs it
-	if err := s.queue.PurgeQueue(); err != nil {
+	if err := s.queue.PurgeQueue(context.Background()); err != nil {
 		s.T().Log(err)
 	}
 }
@@ -64,11 +64,12 @@ func (s *SendMessageBatchSuite) TestSendMessageBatch() {
 		},
 	}
 
-	if err := s.queue.SendMessageBatch(batchMessages...); !s.NoError(err) {
+	if err := s.queue.SendMessageBatch(context.Background(), batchMessages...); !s.NoError(err) {
 		return
 	}
 
 	messages, err := s.queue.ReceiveMessage(
+		context.Background(),
 		option.MaxNumberOfMessages(5),
 		option.UseAllAttribute(),
 	)
@@ -85,7 +86,7 @@ func (s *SendMessageBatchSuite) TestSendMessageBatch() {
 			s.Equal(mav.StringValue, a.StringValue)
 		}
 		s.Equal(batchMessages[i].Body, *m.Body)
-		s.queue.DeleteMessage(m.ReceiptHandle)
+		s.queue.DeleteMessage(context.Background(), m.ReceiptHandle)
 	}
 }
 
@@ -104,7 +105,7 @@ func (s *SendMessageBatchSuite) TestSendMessageBatchError() {
 		},
 	}
 
-	if err := s.queue.SendMessageBatch(batchMessages...); s.Error(err) {
+	if err := s.queue.SendMessageBatch(context.Background(), batchMessages...); s.Error(err) {
 		if berrs, ok := IsBatchError(err); s.True(ok, "error must contain *BatchError") {
 			s.Len(berrs, 1)
 
@@ -115,6 +116,7 @@ func (s *SendMessageBatchSuite) TestSendMessageBatchError() {
 	}
 
 	messages, err := s.queue.ReceiveMessage(
+		context.Background(),
 		option.MaxNumberOfMessages(5),
 		option.UseAllAttribute(),
 	)
@@ -124,7 +126,7 @@ func (s *SendMessageBatchSuite) TestSendMessageBatchError() {
 
 	s.Len(messages, 1)
 	for _, m := range messages {
-		s.queue.DeleteMessage(m.ReceiptHandle)
+		s.queue.DeleteMessage(context.Background(), m.ReceiptHandle)
 	}
 }
 

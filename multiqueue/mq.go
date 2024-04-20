@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/mercari/go-circuitbreaker"
-	"github.com/nabeken/aws-go-sqs/v3/queue"
+	"github.com/nabeken/aws-go-sqs/v4/queue"
 )
 
 type Queue struct {
@@ -252,11 +252,13 @@ AGAIN:
 				return wq.q[n]
 			}
 		}
+
 		if wq.nextIndex >= len(wq.q) {
 			wq.round++
 			wq.nextIndex = 0
 		}
 	}
+
 	if wq.round >= wq.maxWeight {
 		wq.round = 0
 	}
