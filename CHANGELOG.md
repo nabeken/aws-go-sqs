@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/nabeken/aws-go-sqs/compare/v3.1.2...v4.0.0) (2024-04-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* add aws-sdk-go-v2 support ([#79](https://github.com/nabeken/aws-go-sqs/issues/79))
+
+### Features
+
+* add aws-sdk-go-v2 support ([#79](https://github.com/nabeken/aws-go-sqs/issues/79)) ([07a7d3c](https://github.com/nabeken/aws-go-sqs/commit/07a7d3cd8de198824f1f8d730ec64adee5b8d211))
+
 ## [3.1.2](https://github.com/nabeken/aws-go-sqs/compare/v3.1.1...v3.1.2) (2024-04-19)
 
 
