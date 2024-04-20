@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.1.2](https://github.com/nabeken/aws-go-sqs/compare/v3.1.1...v3.1.2) (2024-04-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency golang to v1.22.2 ([9483c07](https://github.com/nabeken/aws-go-sqs/commit/9483c07a1899058b537e74a23293da476888dc4d))
+* **deps:** update module github.com/aws/aws-sdk-go to v1.51.16 ([e10d4e4](https://github.com/nabeken/aws-go-sqs/commit/e10d4e43b75c8ac557e41930524108cdf9b75416))
+* **deps:** update module github.com/aws/aws-sdk-go to v1.51.21 ([119d8ba](https://github.com/nabeken/aws-go-sqs/commit/119d8ba72ff544a71e55d98eb98bd7ddd9ce6eb5))
+* **deps:** update module github.com/aws/aws-sdk-go to v1.51.25 ([75fb005](https://github.com/nabeken/aws-go-sqs/commit/75fb005177146e483d2d7304f0f8892cf1c8571b))
+
 ## [3.1.1](https://github.com/nabeken/aws-go-sqs/compare/v3.1.0...v3.1.1) (2024-03-29)
 
 
