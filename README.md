@@ -4,27 +4,23 @@
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/nabeken/aws-go-sqs/v3)](https://pkg.go.dev/github.com/nabeken/aws-go-sqs/v3)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-`aws-go-sqs` is a SQS wrapper library for [aws/aws-sdk-go](https://github.com/aws/aws-sdk-go).
+`aws-go-sqs` is a SQS wrapper library for [aws/aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2).
 
 # Usage
 
-`v3` and later require Go Modules support to import this package.
+The current version is `v4`.
+
 ```go
-import "github.com/nabeken/aws-go-sqs/v3/queue"
+import "github.com/nabeken/aws-go-sqs/v4/queue"
 ```
 
-*Note*: v3 is still under-development as it doesn't have any stable release.
-
-From v3 train (and `master` branch), we no longer use `gopkg.in`.
-
-- We have [v1 branch](https://github.com/nabeken/aws-go-sqs/tree/v1) so you can import it from `gopkg.in/nabeken/aws-go-sqs.v1`.
-- We have [v2 branch](https://github.com/nabeken/aws-go-sqs/tree/v2) so you can import it from `gopkg.in/nabeken/aws-go-sqs.v2`.
+If you're looking for the aws-sdk-go (v1) support, please use v2 or v3.
 
 # Multi-queue implementation
 
-v3 has [multiqueue](multiqueue/) package to address multi-queue (region) deployment of SQS. SQS is a crucial messaging component but it's still possible to become unavailable for several hours. We experienced that incident at [2020-04-20](https://status.aws.amazon.com/rss/sqs-ap-northeast-1.rss).
+v3 and later has the [multiqueue](multiqueue/) package to address multi-queue (region) deployment of SQS. SQS is a crucial messaging component but it's still possible to become unavailable for several hours.
 
-Since SQS is just a message bus between components, deploying SQS to the multiple regions for availability works even the system isn't fully deployed to the multiple regions.
+Since SQS is just a message bus between components, deploying SQS to the multiple regions for availability still works even if an entire system isn't fully deployed to the multiple regions.
 
 ## How `multiqueue` works
 
@@ -40,7 +36,13 @@ When there is no queue in the "available" slice, the dispatcher returns a queue 
 Example code:
 ```go
 // Create SQS instance
-s := sqs.New(session.Must(session.NewSession()))
+cfg, err := config.LoadDefaultConfig(context.TODO())
+if err != nil {
+    log.Fatalf("loading AWS config: %s", err.Error())
+}
+
+s1 := sqs.NewFromConfig(cfg)
+s2 := sqs.NewFromConfig(cfg)
 
 // Create Queue instances
 q1 := queue.MustNew(s, "example-queue1")

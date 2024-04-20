@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -15,14 +16,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/mercari/go-circuitbreaker"
-	"github.com/nabeken/aws-go-sqs/v3/multiqueue"
-	"github.com/nabeken/aws-go-sqs/v3/queue"
-	"github.com/nabeken/aws-go-sqs/v3/queue/option"
+	"github.com/nabeken/aws-go-sqs/v4/multiqueue"
+	"github.com/nabeken/aws-go-sqs/v4/queue"
+	"github.com/nabeken/aws-go-sqs/v4/queue/option"
 )
+
+var errGotSignal = errors.New("got a signal")
 
 func main() {
 	var queueName1 = flag.String("queue1", "", "specify SQS queue name 1")
@@ -39,7 +41,8 @@ func main() {
 
 	flag.Parse()
 
-	rand.Seed(time.Now().UnixNano())
+	randSource := rand.NewSource(time.Now().UnixNano())
+	rng := rand.New(randSource)
 
 	if *queueName1 == "" || *queueName2 == "" {
 		log.Fatal("Please specify queue name")
@@ -48,11 +51,11 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancelCause(context.Background())
 	go func() {
 		sig := <-c
 		log.Println("got signal:", sig)
-		cancel()
+		cancel(errGotSignal)
 	}()
 
 	tr := &http.Transport{
@@ -79,18 +82,22 @@ func main() {
 	}
 
 	// Create SQS instance for region1
-	s1 := sqs.New(session.Must(session.NewSession(&aws.Config{
-		HTTPClient: httpClient,
-		Region:     region1,
-	})))
-	s2 := sqs.New(session.Must(session.NewSession(&aws.Config{
-		HTTPClient: httpClient,
-		Region:     region2,
-	})))
+	cfg, err := config.LoadDefaultConfig(ctx, config.WithHTTPClient(httpClient))
+	if err != nil {
+		log.Fatalf("loading AWS config: %s", err.Error())
+	}
+
+	s1 := sqs.NewFromConfig(cfg, func(opts *sqs.Options) {
+		opts.Region = *region1
+	})
+
+	s2 := sqs.NewFromConfig(cfg, func(opts *sqs.Options) {
+		opts.Region = *region2
+	})
 
 	// Create Queue instance
-	q1 := multiqueue.NewQueue(queue.MustNew(s1, *queueName1)).Weight(*weight1)
-	q2 := multiqueue.NewQueue(queue.MustNew(s2, *queueName2)).Weight(*weight2)
+	q1 := multiqueue.NewQueue(queue.MustNew(ctx, s1, *queueName1)).Weight(*weight1)
+	q2 := multiqueue.NewQueue(queue.MustNew(ctx, s2, *queueName2)).Weight(*weight2)
 
 	// if we do not set OpenTimeout nor OpenBackOff, the default value of OpenBackOff will be used.
 	cbOpts := []circuitbreaker.BreakerOption{
@@ -108,10 +115,11 @@ func main() {
 			{URL: *q1.URL},
 			{URL: *q2.URL},
 		},
+		rng: rng,
 	}
 	go func() {
 		log.Print("starting failure injection HTTP server...")
-		http.ListenAndServe("127.0.0.1:9003", fss)
+		_ = http.ListenAndServe("127.0.0.1:9003", fss)
 	}()
 
 	var wg sync.WaitGroup
@@ -171,7 +179,6 @@ func send(ctx context.Context, count, concurrency int, d *multiqueue.Dispatcher,
 
 	sem := make(chan struct{}, concurrency)
 
-LOOP:
 	for i := 0; i < count; i++ {
 		sem <- struct{}{}
 		cnt := i + 1
@@ -185,10 +192,15 @@ LOOP:
 						return nil, err
 					}
 
-					return exec.SendMessage(fmt.Sprintf("MESSAGE BODY FROM MULTI-QUEUE %d", cnt), option.MessageAttributes(attrs))
+					return exec.SendMessage(ctx, fmt.Sprintf("MESSAGE BODY FROM MULTI-QUEUE %d", cnt), option.MessageAttributes(attrs))
 				})
 
 				if err != nil {
+					if ctxGotSignal(ctx) {
+						log.Printf("got a signal")
+						return
+					}
+
 					log.Printf("%s: unable to send the message. will retry: %s", *exec.Queue.URL, err)
 					if err == circuitbreaker.ErrOpen {
 						time.Sleep(time.Second)
@@ -202,7 +214,7 @@ LOOP:
 
 		select {
 		case <-ctx.Done():
-			break LOOP
+			return
 		default:
 		}
 	}
@@ -214,15 +226,17 @@ func recv(ctx context.Context, exec *multiqueue.Executor) []string {
 	log.Printf("%s: starting receiver...", *exec.URL)
 
 	var messages []string
+
 	for {
 		select {
 		case <-ctx.Done():
 			log.Printf("shutting down receiver... count:%d", len(messages))
-			return messages
+			goto END
 		default:
 		}
 
 		resp, err := exec.ReceiveMessage(
+			ctx,
 			option.MaxNumberOfMessages(10),
 		)
 		if err != nil {
@@ -230,12 +244,14 @@ func recv(ctx context.Context, exec *multiqueue.Executor) []string {
 		}
 
 		for _, m := range resp {
-			if err := exec.DeleteMessage(m.ReceiptHandle); err != nil {
+			if err := exec.DeleteMessage(ctx, m.ReceiptHandle); err != nil {
 				log.Printf("unable to delete message: %s", err)
 			}
 			messages = append(messages, *m.Body)
 		}
 	}
+
+END:
 
 	return messages
 }
@@ -249,6 +265,7 @@ type failureScenario struct {
 type failureScenarioServer struct {
 	mu       sync.Mutex
 	scenario []failureScenario
+	rng      *rand.Rand
 }
 
 func (s *failureScenarioServer) findScenario(q *multiqueue.Queue) (failureScenario, bool) {
@@ -267,7 +284,7 @@ func (s *failureScenarioServer) failureScenario(q *multiqueue.Queue) error {
 	}
 
 	if time.Now().Before(sc.Until) {
-		if rand.Float64() > sc.ErrRate {
+		if s.rng.Float64() > sc.ErrRate {
 			return nil
 		}
 		return fmt.Errorf("this is a failure scenario until %s", sc.Until.Format(time.RFC3339))
@@ -303,11 +320,17 @@ func (s *failureScenarioServer) ServeHTTP(rw http.ResponseWriter, req *http.Requ
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if index > int64(len(s.scenario))-1 {
-		http.Error(rw, err.Error(), http.StatusBadRequest)
+		http.Error(rw, "index out of bound", http.StatusBadRequest)
 		return
 	}
 	s.scenario[index].Until = time.Now().Add(dur)
 	s.scenario[index].ErrRate = errRate
 
-	json.NewEncoder(rw).Encode(s.scenario)
+	_ = json.NewEncoder(rw).Encode(s.scenario)
+}
+
+func ctxGotSignal(ctx context.Context) bool {
+	err := context.Cause(ctx)
+
+	return err != nil && errors.Is(err, errGotSignal)
 }

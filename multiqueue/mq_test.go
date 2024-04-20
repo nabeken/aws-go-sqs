@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/mercari/go-circuitbreaker"
-	"github.com/nabeken/aws-go-sqs/v3/queue"
+	"github.com/nabeken/aws-go-sqs/v4/queue"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -111,9 +111,9 @@ func TestMaxWeight(t *testing.T) {
 
 func TestWeightedQueues(t *testing.T) {
 	wq := NewWeightedQueues([]*Queue{
-		&Queue{w: 1, Queue: testDummyQueue("dummy1")},
-		&Queue{w: 5, Queue: testDummyQueue("dummy2")},
-		&Queue{w: 2, Queue: testDummyQueue("dummy3")},
+		{w: 1, Queue: testDummyQueue("dummy1")},
+		{w: 5, Queue: testDummyQueue("dummy2")},
+		{w: 2, Queue: testDummyQueue("dummy3")},
 	})
 
 	for i := 0; i < 3; i++ {

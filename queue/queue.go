@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/nabeken/aws-go-sqs/v3/queue/option"
+	"github.com/nabeken/aws-go-sqs/v4/internal/sqsiface"
+	"github.com/nabeken/aws-go-sqs/v4/queue/option"
 )
 
 // A Queue is an SQS queue which holds queue url in URL.
@@ -19,8 +20,8 @@ type Queue struct {
 }
 
 // New initializes Queue with name.
-func New(s sqsiface.SQSAPI, name string) (*Queue, error) {
-	u, err := GetQueueURL(s, name)
+func New(ctx context.Context, s sqsiface.SQSAPI, name string) (*Queue, error) {
+	u, err := GetQueueURL(ctx, s, name)
 	if err != nil {
 		return nil, err
 	}
@@ -33,27 +34,22 @@ func New(s sqsiface.SQSAPI, name string) (*Queue, error) {
 
 // MustNew initializes Queue with name.
 // It will panic when it fails to initialize a queue.
-func MustNew(s sqsiface.SQSAPI, name string) *Queue {
-	q, err := New(s, name)
+func MustNew(ctx context.Context, s sqsiface.SQSAPI, name string) *Queue {
+	q, err := New(ctx, s, name)
 	if err != nil {
 		panic(err)
 	}
 	return q
 }
 
-// ChangeMessageVisibility wraps ChangeMessageVisibilityWithContext using context.Background.
-func (q *Queue) ChangeMessageVisibility(receiptHandle *string, visibilityTimeout int64) error {
-	return q.ChangeMessageVisibilityWithContext(context.Background(), receiptHandle, visibilityTimeout)
-}
-
-// ChangeMessageVisibilityWithContext changes a message visibiliy timeout.
-func (q *Queue) ChangeMessageVisibilityWithContext(ctx context.Context, receiptHandle *string, visibilityTimeout int64) error {
+// ChangeMessageVisibility changes a message visibiliy timeout.
+func (q *Queue) ChangeMessageVisibility(ctx context.Context, receiptHandle *string, visibilityTimeout int32) error {
 	req := &sqs.ChangeMessageVisibilityInput{
 		ReceiptHandle:     receiptHandle,
-		VisibilityTimeout: aws.Int64(visibilityTimeout),
+		VisibilityTimeout: visibilityTimeout,
 		QueueUrl:          q.URL,
 	}
-	_, err := q.SQS.ChangeMessageVisibilityWithContext(ctx, req)
+	_, err := q.SQS.ChangeMessageVisibility(ctx, req)
 	return err
 }
 
@@ -61,24 +57,19 @@ func (q *Queue) ChangeMessageVisibilityWithContext(ctx context.Context, receiptH
 // change a visibility timeout.
 type BatchChangeMessageVisibility struct {
 	ReceiptHandle     *string
-	VisibilityTimeout int64
+	VisibilityTimeout int32
 }
 
-// ChangeMessageVisibilityBatch wraps ChangeMessageVisibilityBatchWithContext using context.Background.
-func (q *Queue) ChangeMessageVisibilityBatch(opts ...BatchChangeMessageVisibility) error {
-	return q.ChangeMessageVisibilityBatchWithContext(context.Background(), opts...)
-}
-
-// ChangeMessageVisibilityBatchWithContext changes a visibility timeout for each message in opts.
-func (q *Queue) ChangeMessageVisibilityBatchWithContext(ctx context.Context, opts ...BatchChangeMessageVisibility) error {
-	entries := make([]*sqs.ChangeMessageVisibilityBatchRequestEntry, len(opts))
+// ChangeMessageVisibilityBatch changes a visibility timeout for each message in opts.
+func (q *Queue) ChangeMessageVisibilityBatch(ctx context.Context, opts ...BatchChangeMessageVisibility) error {
+	entries := make([]types.ChangeMessageVisibilityBatchRequestEntry, len(opts))
 	id2index := make(map[string]int)
 	for i, b := range opts {
 		id := aws.String(fmt.Sprintf("msg-%d", i))
-		entries[i] = &sqs.ChangeMessageVisibilityBatchRequestEntry{
+		entries[i] = types.ChangeMessageVisibilityBatchRequestEntry{
 			Id:                id,
 			ReceiptHandle:     b.ReceiptHandle,
-			VisibilityTimeout: aws.Int64(b.VisibilityTimeout),
+			VisibilityTimeout: b.VisibilityTimeout,
 		}
 		id2index[*id] = i
 	}
@@ -88,20 +79,16 @@ func (q *Queue) ChangeMessageVisibilityBatchWithContext(ctx context.Context, opt
 		QueueUrl: q.URL,
 	}
 
-	resp, err := q.SQS.ChangeMessageVisibilityBatchWithContext(ctx, req)
+	resp, err := q.SQS.ChangeMessageVisibilityBatch(ctx, req)
 	if err != nil {
 		return err
 	}
+
 	return NewBatchError(id2index, resp.Failed)
 }
 
-// SendMessage wraps SendMessageWithContext using context.Background.
-func (q *Queue) SendMessage(body string, opts ...option.SendMessageInput) (*sqs.SendMessageOutput, error) {
-	return q.SendMessageWithContext(context.Background(), body, opts...)
-}
-
-// SendMessageWithContext sends a message to an SQS queue. opts are used to change parameters for a message.
-func (q *Queue) SendMessageWithContext(ctx context.Context, body string, opts ...option.SendMessageInput) (*sqs.SendMessageOutput, error) {
+// SendMessage sends a message to an SQS queue. opts are used to change parameters for a message.
+func (q *Queue) SendMessage(ctx context.Context, body string, opts ...option.SendMessageInput) (*sqs.SendMessageOutput, error) {
 	req := &sqs.SendMessageInput{
 		MessageBody: aws.String(body),
 		QueueUrl:    q.URL,
@@ -111,7 +98,7 @@ func (q *Queue) SendMessageWithContext(ctx context.Context, body string, opts ..
 		f(req)
 	}
 
-	return q.SQS.SendMessageWithContext(ctx, req)
+	return q.SQS.SendMessage(ctx, req)
 }
 
 // A BatchMessage represents each request to send a message.
@@ -132,14 +119,14 @@ type BatchError struct {
 }
 
 // NewBatchError composes an error from errors if available.
-func NewBatchError(id2index map[string]int, errors []*sqs.BatchResultErrorEntry) error {
+func NewBatchError(id2index map[string]int, errors []types.BatchResultErrorEntry) error {
 	var result error
 	for _, entry := range errors {
 		err := &BatchError{
 			Index:       id2index[*entry.Id],
 			Code:        *entry.Code,
 			Message:     *entry.Message,
-			SenderFault: *entry.SenderFault,
+			SenderFault: entry.SenderFault,
 		}
 		result = multierror.Append(result, err)
 	}
@@ -173,13 +160,8 @@ func IsBatchError(err error) (errors []*BatchError, ok bool) {
 	return errors, len(errors) > 0
 }
 
-// SendMessageBatch wraps SendMessageBatchWithContext using context.Background.
-func (q *Queue) SendMessageBatch(messages ...BatchMessage) error {
-	return q.SendMessageBatchWithContext(context.Background(), messages...)
-}
-
 // SendMessageBatch sends messages to SQS queue.
-func (q *Queue) SendMessageBatchWithContext(ctx context.Context, messages ...BatchMessage) error {
+func (q *Queue) SendMessageBatch(ctx context.Context, messages ...BatchMessage) error {
 	entries, id2index := BuildBatchRequestEntry(messages...)
 
 	req := &sqs.SendMessageBatchInput{
@@ -187,21 +169,16 @@ func (q *Queue) SendMessageBatchWithContext(ctx context.Context, messages ...Bat
 		QueueUrl: q.URL,
 	}
 
-	resp, err := q.SQS.SendMessageBatchWithContext(ctx, req)
+	resp, err := q.SQS.SendMessageBatch(ctx, req)
 	if err != nil {
 		return err
 	}
 	return NewBatchError(id2index, resp.Failed)
 }
 
-// ReceiveMessage wraps ReceiveMessageWithContext using context.Background.
-func (q *Queue) ReceiveMessage(opts ...option.ReceiveMessageInput) ([]*sqs.Message, error) {
-	return q.ReceiveMessageWithContext(context.Background(), opts...)
-}
-
 // ReceiveMessage receives messages from SQS queue.
 // opts are used to change parameters for a request.
-func (q *Queue) ReceiveMessageWithContext(ctx context.Context, opts ...option.ReceiveMessageInput) ([]*sqs.Message, error) {
+func (q *Queue) ReceiveMessage(ctx context.Context, opts ...option.ReceiveMessageInput) ([]types.Message, error) {
 	req := &sqs.ReceiveMessageInput{
 		QueueUrl: q.URL,
 	}
@@ -210,39 +187,29 @@ func (q *Queue) ReceiveMessageWithContext(ctx context.Context, opts ...option.Re
 		f(req)
 	}
 
-	resp, err := q.SQS.ReceiveMessageWithContext(ctx, req)
+	resp, err := q.SQS.ReceiveMessage(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 	return resp.Messages, nil
 }
 
-// DeleteMessage wraps DeleteMessageWithContext using context.Background.
-func (q *Queue) DeleteMessage(receiptHandle *string) error {
-	return q.DeleteMessageWithContext(context.Background(), receiptHandle)
-}
-
 // DeleteMessage deletes a message from SQS queue.
-func (q *Queue) DeleteMessageWithContext(ctx context.Context, receiptHandle *string) error {
-	_, err := q.SQS.DeleteMessageWithContext(ctx, &sqs.DeleteMessageInput{
+func (q *Queue) DeleteMessage(ctx context.Context, receiptHandle *string) error {
+	_, err := q.SQS.DeleteMessage(ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      q.URL,
 		ReceiptHandle: receiptHandle,
 	})
 	return err
 }
 
-// DeleteMessageBatch wraps DeleteMessageBatchWithContext using context.Background.
-func (q *Queue) DeleteMessageBatch(receiptHandles ...*string) error {
-	return q.DeleteMessageBatchWithContext(context.Background(), receiptHandles...)
-}
-
-// DeleteMessageBatchWithContext deletes messages from SQS queue.
-func (q *Queue) DeleteMessageBatchWithContext(ctx context.Context, receiptHandles ...*string) error {
-	entries := make([]*sqs.DeleteMessageBatchRequestEntry, len(receiptHandles))
+// DeleteMessageBatch deletes messages from SQS queue.
+func (q *Queue) DeleteMessageBatch(ctx context.Context, receiptHandles ...*string) error {
+	entries := make([]types.DeleteMessageBatchRequestEntry, len(receiptHandles))
 	id2index := make(map[string]int)
 	for i, rh := range receiptHandles {
 		id := aws.String(fmt.Sprintf("msg-%d", i))
-		entries[i] = &sqs.DeleteMessageBatchRequestEntry{
+		entries[i] = types.DeleteMessageBatchRequestEntry{
 			Id:            id,
 			ReceiptHandle: rh,
 		}
@@ -254,52 +221,37 @@ func (q *Queue) DeleteMessageBatchWithContext(ctx context.Context, receiptHandle
 		QueueUrl: q.URL,
 	}
 
-	resp, err := q.SQS.DeleteMessageBatchWithContext(ctx, req)
+	resp, err := q.SQS.DeleteMessageBatch(ctx, req)
 	if err != nil {
 		return err
 	}
 	return NewBatchError(id2index, resp.Failed)
 }
 
-// DeleteQueue wraps DeleteQueueWithContext using context.Background.
-func (q *Queue) DeleteQueue() error {
-	return q.DeleteQueueWithContext(context.Background())
-}
-
 // DeleteQueue deletes a queue in SQS.
-func (q *Queue) DeleteQueueWithContext(ctx context.Context) error {
-	_, err := q.SQS.DeleteQueueWithContext(ctx, &sqs.DeleteQueueInput{
+func (q *Queue) DeleteQueue(ctx context.Context) error {
+	_, err := q.SQS.DeleteQueue(ctx, &sqs.DeleteQueueInput{
 		QueueUrl: q.URL,
 	})
 	return err
-}
-
-// PurgeQueue wraps PurgeQueueWithContext using context.Background.
-func (q *Queue) PurgeQueue() error {
-	return q.PurgeQueueWithContext(context.Background())
 }
 
 // PurgeQueue purges messages in SQS queue.
 // It deletes all messages in SQS queue.
-func (q *Queue) PurgeQueueWithContext(ctx context.Context) error {
-	_, err := q.SQS.PurgeQueueWithContext(ctx, &sqs.PurgeQueueInput{
+func (q *Queue) PurgeQueue(ctx context.Context) error {
+	_, err := q.SQS.PurgeQueue(ctx, &sqs.PurgeQueueInput{
 		QueueUrl: q.URL,
 	})
 	return err
 }
 
-// GetQueueURL wraps GetQueueURLWithContext using context.Background.
-func GetQueueURL(s sqsiface.SQSAPI, name string) (*string, error) {
-	return GetQueueURLWithContext(context.Background(), s, name)
-}
-
-// GetQueueURLWithContext returns a URL for the given queue name.
-func GetQueueURLWithContext(ctx context.Context, s sqsiface.SQSAPI, name string) (*string, error) {
+// GetQueueURL returns a URL for the given queue name.
+func GetQueueURL(ctx context.Context, s sqsiface.SQSAPI, name string) (*string, error) {
 	req := &sqs.GetQueueUrlInput{
 		QueueName: aws.String(name),
 	}
 
-	resp, err := s.GetQueueUrlWithContext(ctx, req)
+	resp, err := s.GetQueueUrl(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -307,8 +259,8 @@ func GetQueueURLWithContext(ctx context.Context, s sqsiface.SQSAPI, name string)
 }
 
 // BuildBatchRequestEntry builds batch entries and id2index map.
-func BuildBatchRequestEntry(messages ...BatchMessage) ([]*sqs.SendMessageBatchRequestEntry, map[string]int) {
-	entries := make([]*sqs.SendMessageBatchRequestEntry, len(messages))
+func BuildBatchRequestEntry(messages ...BatchMessage) ([]types.SendMessageBatchRequestEntry, map[string]int) {
+	entries := make([]types.SendMessageBatchRequestEntry, len(messages))
 	id2index := make(map[string]int)
 	for i, bm := range messages {
 		req := &sqs.SendMessageInput{}
@@ -317,7 +269,7 @@ func BuildBatchRequestEntry(messages ...BatchMessage) ([]*sqs.SendMessageBatchRe
 		}
 
 		id := aws.String(fmt.Sprintf("msg-%d", i))
-		entries[i] = &sqs.SendMessageBatchRequestEntry{
+		entries[i] = types.SendMessageBatchRequestEntry{
 			DelaySeconds:      req.DelaySeconds,
 			MessageAttributes: req.MessageAttributes,
 			MessageBody:       aws.String(bm.Body),
