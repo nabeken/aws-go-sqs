@@ -21,7 +21,7 @@ jobs:
           installation_id: ${{ secrets.release_gh_app_inst_id }}
           private_key: ${{ secrets.release_gh_app_priv_key }}
 
-      - uses: google-github-actions/release-please-action@a37ac6e4f6449ce8b3f7607e4d97d0146028dc0b # v4
+      - uses: googleapis/release-please-action@v4 # v4
         with:
           release-type: go
           token: ${{ steps.go-github-apps.outputs.app_github_token }}
