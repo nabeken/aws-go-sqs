@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get GITHUB_TOKEN for release
-        uses: nabeken/go-github-apps@ad9874fea2c2c0799b7bc0dece5e3f1251c72eaf # v0
+        uses: nabeken/go-github-apps@afd4a1da8d2eafaa6902580a943dc17dfd055ba9 # v0
         id: go-github-apps
         with:
           app_id: ${{ secrets.release_gh_app_id }}
