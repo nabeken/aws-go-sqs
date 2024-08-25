@@ -1,5 +1,38 @@
 # Changelog
 
+## [4.0.1](https://github.com/nabeken/aws-go-sqs/compare/v4.0.0...v4.0.1) (2024-08-25)
+
+
+### Bug Fixes
+
+* **deps:** pin googleapis/release-please-action action to f3969c0 ([#98](https://github.com/nabeken/aws-go-sqs/issues/98)) ([ecbc0c8](https://github.com/nabeken/aws-go-sqs/commit/ecbc0c8f1a6bbf92a82f3a4bc1ff3ffb11d65ade))
+* **deps:** update actions/checkout digest to 0ad4b8f ([#87](https://github.com/nabeken/aws-go-sqs/issues/87)) ([021430f](https://github.com/nabeken/aws-go-sqs/commit/021430f3c9898fcd1dd4f60e59e953c5c06bfaa8))
+* **deps:** update actions/checkout digest to 692973e ([#102](https://github.com/nabeken/aws-go-sqs/issues/102)) ([48f6e96](https://github.com/nabeken/aws-go-sqs/commit/48f6e96358b8f7d30e138150406f01bf5a19540a))
+* **deps:** update actions/checkout digest to a5ac7e5 ([#96](https://github.com/nabeken/aws-go-sqs/issues/96)) ([4720148](https://github.com/nabeken/aws-go-sqs/commit/4720148f3b9dc8298448c305eb58d478e102e0d1))
+* **deps:** update actions/setup-go digest to 0a12ed9 ([#108](https://github.com/nabeken/aws-go-sqs/issues/108)) ([0197c13](https://github.com/nabeken/aws-go-sqs/commit/0197c135d83858c059ebb243dfdd8aa6295f7726))
+* **deps:** update actions/setup-go digest to cdcb360 ([#90](https://github.com/nabeken/aws-go-sqs/issues/90)) ([a9adeaa](https://github.com/nabeken/aws-go-sqs/commit/a9adeaa2589bfb148aa8f69b13f80bdd875ec7c7))
+* **deps:** update all non-major dependencies ([3c14aa5](https://github.com/nabeken/aws-go-sqs/commit/3c14aa5d665a8cc66884f5f91fcf6f6d838513b0))
+* **deps:** update all non-major dependencies ([ab6418c](https://github.com/nabeken/aws-go-sqs/commit/ab6418ce223d84b80c0a05385e6ee7a4084ee7e2))
+* **deps:** update all non-major dependencies ([ab14c8f](https://github.com/nabeken/aws-go-sqs/commit/ab14c8f5ea2ec119f47881822cd2f032ea306d0a))
+* **deps:** update all non-major dependencies ([2e6ddd1](https://github.com/nabeken/aws-go-sqs/commit/2e6ddd17dbedde7d94cc0c8b449bac3362d5b099))
+* **deps:** update all non-major dependencies ([c74679c](https://github.com/nabeken/aws-go-sqs/commit/c74679cbf8354cda62b6053a0cf03b178436b64f))
+* **deps:** update all non-major dependencies ([6397392](https://github.com/nabeken/aws-go-sqs/commit/6397392a27c5af6a588ba9a9f8172401238db9f3))
+* **deps:** update all non-major dependencies ([18f5105](https://github.com/nabeken/aws-go-sqs/commit/18f5105ab60b9e8788981ccc439ed0c7c67288a7))
+* **deps:** update aws-sdk-go-v2 monorepo ([8d73724](https://github.com/nabeken/aws-go-sqs/commit/8d737242d1707f13f5dfeb5b4ad1029976862f06))
+* **deps:** update aws-sdk-go-v2 monorepo ([a875a0f](https://github.com/nabeken/aws-go-sqs/commit/a875a0faa20dbaaec645b07bbdb2c991057e04af))
+* **deps:** update dependency golang to v1.22.3 ([ccaf932](https://github.com/nabeken/aws-go-sqs/commit/ccaf9329a7703cc9eea31bb36eafe8e5973e3396))
+* **deps:** update dependency golang to v1.22.4 ([12ab8c7](https://github.com/nabeken/aws-go-sqs/commit/12ab8c70000679057f18f55d02554cf5a7ce13b4))
+* **deps:** update dependency golang to v1.22.5 ([73515ab](https://github.com/nabeken/aws-go-sqs/commit/73515ab1cfcc769ce05d4d9f01de5e829eb6fb25))
+* **deps:** update dependency golang to v1.22.6 ([23b04b6](https://github.com/nabeken/aws-go-sqs/commit/23b04b60b39329ebdf90b0435636d2b73f4e4ec6))
+* **deps:** update dependency golang to v1.23.0 ([#113](https://github.com/nabeken/aws-go-sqs/issues/113)) ([3772a56](https://github.com/nabeken/aws-go-sqs/commit/3772a5624a223e3f6b3e2b790b20667cba0fc377))
+* **deps:** update google-github-actions/release-please-action digest to e4dc86b ([#94](https://github.com/nabeken/aws-go-sqs/issues/94)) ([e46ebf5](https://github.com/nabeken/aws-go-sqs/commit/e46ebf59fdfd93d620f08db495c427e31ceca6ca))
+* **deps:** update googleapis/release-please-action digest to 7987652 ([#101](https://github.com/nabeken/aws-go-sqs/issues/101)) ([a2326ce](https://github.com/nabeken/aws-go-sqs/commit/a2326cede17ff05329be982be0912f7151ac416c))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/config to v1.27.24 ([8b94da2](https://github.com/nabeken/aws-go-sqs/commit/8b94da2fbb7b700d41e607d0d97108387cca83b7))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/config to v1.27.27 ([c151e87](https://github.com/nabeken/aws-go-sqs/commit/c151e871a32cee900080df40011623cacce31938))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/service/sqs to v1.31.4 ([a7d267d](https://github.com/nabeken/aws-go-sqs/commit/a7d267db38687b6a545a0bd13022dc1781a04788))
+* **deps:** update nabeken/go-github-apps digest to ad9874f ([#103](https://github.com/nabeken/aws-go-sqs/issues/103)) ([71fdafd](https://github.com/nabeken/aws-go-sqs/commit/71fdafdc6adb31e8fc03eceb00b4a1a7379d5ff2))
+* **deps:** update nabeken/go-github-apps digest to afd4a1d ([#110](https://github.com/nabeken/aws-go-sqs/issues/110)) ([76ffeaf](https://github.com/nabeken/aws-go-sqs/commit/76ffeafd9d424033fad77e4ad9e04a8b9d805f17))
+
 ## [4.0.0](https://github.com/nabeken/aws-go-sqs/compare/v3.1.2...v4.0.0) (2024-04-20)
 
 
