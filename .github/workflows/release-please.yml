@@ -14,14 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get GITHUB_TOKEN for release
-        uses: nabeken/go-github-apps@afd4a1da8d2eafaa6902580a943dc17dfd055ba9 # v0
-        id: go-github-apps
+        uses: actions/create-github-app-token@v1
+        id: app-token
         with:
-          app_id: ${{ secrets.release_gh_app_id }}
-          installation_id: ${{ secrets.release_gh_app_inst_id }}
-          private_key: ${{ secrets.release_gh_app_priv_key }}
+          app-id: ${{ secrets.release_gh_app_id }}
+          private-key: ${{ secrets.release_gh_app_priv_key }}
 
       - uses: googleapis/release-please-action@7987652d64b4581673a76e33ad5e98e3dd56832f # v4
         with:
           release-type: go
-          token: ${{ steps.go-github-apps.outputs.app_github_token }}
+          token: ${{ steps.app-token.outputs.token }}
