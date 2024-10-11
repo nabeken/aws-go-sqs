@@ -1,5 +1,24 @@
 # Changelog
 
+## [4.0.2](https://github.com/nabeken/aws-go-sqs/compare/v4.0.1...v4.0.2) (2024-10-11)
+
+
+### Bug Fixes
+
+* **deps:** pin actions/create-github-app-token action to 31c86eb ([#117](https://github.com/nabeken/aws-go-sqs/issues/117)) ([ef4ff5b](https://github.com/nabeken/aws-go-sqs/commit/ef4ff5baaa3862a8a5948196e42fe2ab3eb50fde))
+* **deps:** update actions/checkout digest to eef6144 ([e20cc29](https://github.com/nabeken/aws-go-sqs/commit/e20cc29beb8e58374b5508428854768226201bd4))
+* **deps:** update actions/create-github-app-token digest to 3378cda ([#121](https://github.com/nabeken/aws-go-sqs/issues/121)) ([b8db11d](https://github.com/nabeken/aws-go-sqs/commit/b8db11d81fffe8c3f2dc6142d92494e4b37b49b1))
+* **deps:** update actions/create-github-app-token digest to 5d869da ([#124](https://github.com/nabeken/aws-go-sqs/issues/124)) ([05cdb69](https://github.com/nabeken/aws-go-sqs/commit/05cdb6946badbe808088698c5e753d9a010f521b))
+* **deps:** update aws-sdk-go-v2 monorepo ([598f7e1](https://github.com/nabeken/aws-go-sqs/commit/598f7e14a82230b39b9cc6af416632b8bea3c9d5))
+* **deps:** update aws-sdk-go-v2 monorepo ([8b2a314](https://github.com/nabeken/aws-go-sqs/commit/8b2a314968f3900121d564255332702925c6613a))
+* **deps:** update aws-sdk-go-v2 monorepo ([7f10086](https://github.com/nabeken/aws-go-sqs/commit/7f100861c20e983ca10b6f33305880f51e330c19))
+* **deps:** update aws-sdk-go-v2 monorepo ([5d27589](https://github.com/nabeken/aws-go-sqs/commit/5d27589016c5cae62368b1bc0329f42730701792))
+* **deps:** update aws-sdk-go-v2 monorepo ([d7ea578](https://github.com/nabeken/aws-go-sqs/commit/d7ea5781072b8ea522115af4e0d78f4c744e1927))
+* **deps:** update aws-sdk-go-v2 monorepo ([5707f44](https://github.com/nabeken/aws-go-sqs/commit/5707f443b8a95d835e5770e0745868be12f67f9f))
+* **deps:** update dependency golang to v1.23.1 ([966331e](https://github.com/nabeken/aws-go-sqs/commit/966331eb8b5eb8a7afa50afc8b5905ca984b783f))
+* **deps:** update dependency golang to v1.23.2 ([bb4fd76](https://github.com/nabeken/aws-go-sqs/commit/bb4fd76ef96a4d586e668bc660892662bc4978d0))
+* **deps:** update suzuki-shunsuke/github-action-renovate-config-validator action to v1.1.0 ([#119](https://github.com/nabeken/aws-go-sqs/issues/119)) ([f686b61](https://github.com/nabeken/aws-go-sqs/commit/f686b614aa2cdaf778ddc217e5f7bf527f8d2da1))
+
 ## [4.0.1](https://github.com/nabeken/aws-go-sqs/compare/v4.0.0...v4.0.1) (2024-08-25)
 
 
