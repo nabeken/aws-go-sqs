@@ -1,5 +1,30 @@
 # Changelog
 
+## [4.0.3](https://github.com/nabeken/aws-go-sqs/compare/v4.0.2...v4.0.3) (2025-06-13)
+
+
+### Bug Fixes
+
+* **deps:** update actions/create-github-app-token action to v2 ([#172](https://github.com/nabeken/aws-go-sqs/issues/172)) ([d8d5d98](https://github.com/nabeken/aws-go-sqs/commit/d8d5d988a5e529b6b57839c1d90c03aee64ce7cb))
+* **deps:** update actions/create-github-app-token digest to 30bf625 ([#175](https://github.com/nabeken/aws-go-sqs/issues/175)) ([74099fa](https://github.com/nabeken/aws-go-sqs/commit/74099fa73bca04ff8aefe001cfcaadbfe7143555))
+* **deps:** update actions/create-github-app-token digest to af35eda ([#167](https://github.com/nabeken/aws-go-sqs/issues/167)) ([e13ede5](https://github.com/nabeken/aws-go-sqs/commit/e13ede521e0799749a673328e77b493d09c44f42))
+* **deps:** update actions/create-github-app-token digest to d72941d ([#168](https://github.com/nabeken/aws-go-sqs/issues/168)) ([72d55dc](https://github.com/nabeken/aws-go-sqs/commit/72d55dc4b7dddf7abc9bf2814dccffab4bde61b8))
+* **deps:** update actions/create-github-app-token digest to db3cdf4 ([#176](https://github.com/nabeken/aws-go-sqs/issues/176)) ([0e97cfd](https://github.com/nabeken/aws-go-sqs/commit/0e97cfd48e1ae424a97d7169375bb77c1acc85c7))
+* **deps:** update actions/create-github-app-token digest to df432ce ([#177](https://github.com/nabeken/aws-go-sqs/issues/177)) ([a390a7d](https://github.com/nabeken/aws-go-sqs/commit/a390a7df59fec851314038fb63d8b0df48796dc8))
+* **deps:** update actions/setup-go digest to 0aaccfd ([#165](https://github.com/nabeken/aws-go-sqs/issues/165)) ([3917c87](https://github.com/nabeken/aws-go-sqs/commit/3917c878ffc0194e118da2e79be1c403b55b65ab))
+* **deps:** update actions/setup-go digest to d35c59a ([#180](https://github.com/nabeken/aws-go-sqs/issues/180)) ([c61075a](https://github.com/nabeken/aws-go-sqs/commit/c61075a25a630db2a926bd0408f4a1adefd1b5b4))
+* **deps:** update aws-sdk-go-v2 monorepo ([#169](https://github.com/nabeken/aws-go-sqs/issues/169)) ([06b1547](https://github.com/nabeken/aws-go-sqs/commit/06b154748306b2aec8b2c5b324b549d2956c15f3))
+* **deps:** update aws-sdk-go-v2 monorepo ([#173](https://github.com/nabeken/aws-go-sqs/issues/173)) ([fb76666](https://github.com/nabeken/aws-go-sqs/commit/fb76666a59eab363b7605bcd00447badde7ff756))
+* **deps:** update aws-sdk-go-v2 monorepo ([#174](https://github.com/nabeken/aws-go-sqs/issues/174)) ([55deed0](https://github.com/nabeken/aws-go-sqs/commit/55deed07ad27ec69239c59f8f92cf5326226c202))
+* **deps:** update aws-sdk-go-v2 monorepo ([#183](https://github.com/nabeken/aws-go-sqs/issues/183)) ([a18545c](https://github.com/nabeken/aws-go-sqs/commit/a18545cb08cab5b6502ad04af8922676598aed51))
+* **deps:** update aws-sdk-go-v2 monorepo ([#184](https://github.com/nabeken/aws-go-sqs/issues/184)) ([7184eff](https://github.com/nabeken/aws-go-sqs/commit/7184eff1512aa46f9e48374dc5910f6d10e8ec2c))
+* **deps:** update dependency go to v1.24.2 ([#170](https://github.com/nabeken/aws-go-sqs/issues/170)) ([d2fc898](https://github.com/nabeken/aws-go-sqs/commit/d2fc898c7242402939842316ad1d4e0d6f40ec2d))
+* **deps:** update dependency go to v1.24.3 ([#178](https://github.com/nabeken/aws-go-sqs/issues/178)) ([0602fb7](https://github.com/nabeken/aws-go-sqs/commit/0602fb702ac9529aa168292c0c5c6edb34ac31a2))
+* **deps:** update dependency go to v1.24.4 ([#181](https://github.com/nabeken/aws-go-sqs/issues/181)) ([5931f1a](https://github.com/nabeken/aws-go-sqs/commit/5931f1abc08768411fbcaf5383a55b6005b7070e))
+* **deps:** update dependency golang to v1.24.2 ([#171](https://github.com/nabeken/aws-go-sqs/issues/171)) ([4bf18b8](https://github.com/nabeken/aws-go-sqs/commit/4bf18b80845b3898fed16d080d8b4417655b26df))
+* **deps:** update dependency golang to v1.24.3 ([#179](https://github.com/nabeken/aws-go-sqs/issues/179)) ([64c7c4a](https://github.com/nabeken/aws-go-sqs/commit/64c7c4a9f233f3a19bef9d9214aa9d0ae067f0de))
+* **deps:** update dependency golang to v1.24.4 ([#182](https://github.com/nabeken/aws-go-sqs/issues/182)) ([cdb85d7](https://github.com/nabeken/aws-go-sqs/commit/cdb85d7a1dd88d519d5b0cc23c9f3996e960a6b5))
+
 ## [4.0.2](https://github.com/nabeken/aws-go-sqs/compare/v4.0.1...v4.0.2) (2025-03-08)
 
 
