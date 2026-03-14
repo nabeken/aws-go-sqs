@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.4](https://github.com/nabeken/aws-go-sqs/compare/v4.0.3...v4.0.4) (2026-03-14)
+
+
+### Bug Fixes
+
+* **deps:** update suzuki-shunsuke/github-action-renovate-config-validator action to v2.1.0 ([#249](https://github.com/nabeken/aws-go-sqs/issues/249)) ([2bf94f2](https://github.com/nabeken/aws-go-sqs/commit/2bf94f223d13ffc27c7bdd3d33539ad4027cbf2a))
+
 ## [4.0.3](https://github.com/nabeken/aws-go-sqs/compare/v4.0.2...v4.0.3) (2026-03-14)
 
 
