@@ -1,5 +1,22 @@
 # Changelog
 
+## [4.0.4](https://github.com/nabeken/aws-go-sqs/compare/v4.0.3...v4.0.4) (2026-05-01)
+
+
+### Bug Fixes
+
+* **deps:** update actions/create-github-app-token digest to 1b10c78 ([#259](https://github.com/nabeken/aws-go-sqs/issues/259)) ([39344ed](https://github.com/nabeken/aws-go-sqs/commit/39344edb7c21cfc88bbebd9dd2b3b6ceeb00fc1b))
+* **deps:** update actions/create-github-app-token digest to 7bd0371 ([#258](https://github.com/nabeken/aws-go-sqs/issues/258)) ([adc8011](https://github.com/nabeken/aws-go-sqs/commit/adc801183b9d7871145b230a4ee8c0a49ba4a707))
+* **deps:** update actions/setup-go digest to 4a36011 ([#256](https://github.com/nabeken/aws-go-sqs/issues/256)) ([bb0630f](https://github.com/nabeken/aws-go-sqs/commit/bb0630f13420f3fb68f8fbb628a704dc10d3bb44))
+* **deps:** update aws-sdk-go-v2 monorepo ([#255](https://github.com/nabeken/aws-go-sqs/issues/255)) ([cb80a9b](https://github.com/nabeken/aws-go-sqs/commit/cb80a9bc8e0864913003b91ed42c62915c1ce887))
+* **deps:** update aws-sdk-go-v2 monorepo ([#261](https://github.com/nabeken/aws-go-sqs/issues/261)) ([35fd5a7](https://github.com/nabeken/aws-go-sqs/commit/35fd5a70960721b32809242fd0d50e274a88274a))
+* **deps:** update aws-sdk-go-v2 monorepo ([#263](https://github.com/nabeken/aws-go-sqs/issues/263)) ([aa340bd](https://github.com/nabeken/aws-go-sqs/commit/aa340bd555a8190bf65310685f9d4d2fab539fa3))
+* **deps:** update go to v1.26.2 ([#246](https://github.com/nabeken/aws-go-sqs/issues/246)) ([2977f3e](https://github.com/nabeken/aws-go-sqs/commit/2977f3ec3ce7621206e51bf5767ee06a7b3d8386))
+* **deps:** update googleapis/release-please-action action to v5 ([#262](https://github.com/nabeken/aws-go-sqs/issues/262)) ([469d937](https://github.com/nabeken/aws-go-sqs/commit/469d9378883a1d6dddf9a8872064e2f8d648d9ba))
+* **deps:** update googleapis/release-please-action digest to 5c625bf ([#260](https://github.com/nabeken/aws-go-sqs/issues/260)) ([936d5b4](https://github.com/nabeken/aws-go-sqs/commit/936d5b4fa6cbfe469fe659f9813335b9cba40293))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/config to v1.32.14 ([#257](https://github.com/nabeken/aws-go-sqs/issues/257)) ([5d50c64](https://github.com/nabeken/aws-go-sqs/commit/5d50c64c4ed11936c875b5fc13bf9e4c829711fe))
+* **deps:** update suzuki-shunsuke/github-action-renovate-config-validator action to v2.1.0 ([#249](https://github.com/nabeken/aws-go-sqs/issues/249)) ([2bf94f2](https://github.com/nabeken/aws-go-sqs/commit/2bf94f223d13ffc27c7bdd3d33539ad4027cbf2a))
+
 ## [4.0.3](https://github.com/nabeken/aws-go-sqs/compare/v4.0.2...v4.0.3) (2026-03-14)
 
 
