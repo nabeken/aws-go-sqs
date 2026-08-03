@@ -273,6 +273,7 @@ func BuildBatchRequestEntry(messages ...BatchMessage) ([]types.SendMessageBatchR
 			DelaySeconds:      req.DelaySeconds,
 			MessageAttributes: req.MessageAttributes,
 			MessageBody:       aws.String(bm.Body),
+			MessageGroupId:    req.MessageGroupId,
 			Id:                id,
 		}
 		id2index[*id] = i

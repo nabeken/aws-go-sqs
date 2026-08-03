@@ -71,6 +71,15 @@ func DelaySeconds(delay int32) SendMessageInput {
 	}
 }
 
+// MessageGroupId returns a SendMessageInput that changes MessageGroupId to groupID.
+// On FIFO queues, it groups messages so that messages in the same group are processed in strict order.
+// On standard queues, it identifies a tenant and enables fair queues.
+func MessageGroupId(groupID string) SendMessageInput {
+	return func(req *sqs.SendMessageInput) {
+		req.MessageGroupId = aws.String(groupID)
+	}
+}
+
 // MessageAttributes returns a SendMessageInput that changes MessageAttributes to attrs.
 // A string value in attrs sets to DataTypeString.
 // A []byte value in attrs sets to DataTypeBinary.
