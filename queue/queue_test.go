@@ -48,6 +48,49 @@ func setupRealSQSTestenv(t *testing.T) *realSQSTestEnv {
 	return env
 }
 
+func TestBuildBatchRequestEntryWithMessageGroupId(t *testing.T) {
+	entries, _ := queue.BuildBatchRequestEntry(
+		queue.BatchMessage{
+			Body: "body1",
+		},
+		queue.BatchMessage{
+			Body:    "body2",
+			Options: []option.SendMessageInput{option.MessageGroupId("tenant-123")},
+		},
+	)
+
+	require.Len(t, entries, 2)
+	assert.Nil(t, entries[0].MessageGroupId)
+	require.NotNil(t, entries[1].MessageGroupId)
+	assert.Equal(t, "tenant-123", *entries[1].MessageGroupId)
+}
+
+func TestSendMessageWithMessageGroupId(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test")
+	}
+
+	env := setupRealSQSTestenv(t)
+
+	groupID := "tenant-123"
+
+	_, err := env.queue.SendMessage(context.Background(), "body", option.MessageGroupId(groupID))
+	require.NoError(t, err)
+
+	messages, err := env.queue.ReceiveMessage(
+		context.Background(),
+		option.WaitTimeSeconds(1),
+		option.MaxNumberOfMessages(1),
+		option.UseAttributes("All"),
+	)
+	require.NoError(t, err)
+	require.Len(t, messages, 1)
+
+	assert.Equal(t, groupID, messages[0].Attributes["MessageGroupId"])
+
+	env.queue.DeleteMessage(context.TODO(), messages[0].ReceiptHandle)
+}
+
 func TestSendMessageBatch(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test")
