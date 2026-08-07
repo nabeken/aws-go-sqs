@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.1](https://github.com/nabeken/aws-go-sqs/compare/v4.1.0...v4.1.1) (2026-08-07)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#286](https://github.com/nabeken/aws-go-sqs/issues/286)) ([6cadf81](https://github.com/nabeken/aws-go-sqs/commit/6cadf813b0705e314f7974ff6dd5312cae65a68e))
+
 ## [4.1.0](https://github.com/nabeken/aws-go-sqs/compare/v4.0.3...v4.1.0) (2026-08-03)
 
 
