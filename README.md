@@ -109,9 +109,9 @@ ensure that RTO and RPO are met.
 
 We have some integration tests in `queue/queue_test.go`.
 
-If you want to run the tests, please create a dedicated queue for the tests. The test suite will issue PurgeQueue API, which purge all messages, in the teardown.
+If you want to run the tests, please create dedicated standard and FIFO queues for the tests. The test suite will issue PurgeQueue API, which purge all messages, in the teardown.
 
-You can specify the name in environment variable.
+You can specify the name in environment variable. The FIFO queue test reuses the same name with a ".fifo" suffix, so the FIFO queue must be named accordingly.
 
 ```sh
 $ cd queue

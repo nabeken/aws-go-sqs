@@ -270,11 +270,12 @@ func BuildBatchRequestEntry(messages ...BatchMessage) ([]types.SendMessageBatchR
 
 		id := aws.String(fmt.Sprintf("msg-%d", i))
 		entries[i] = types.SendMessageBatchRequestEntry{
-			DelaySeconds:      req.DelaySeconds,
-			MessageAttributes: req.MessageAttributes,
-			MessageBody:       aws.String(bm.Body),
-			MessageGroupId:    req.MessageGroupId,
-			Id:                id,
+			DelaySeconds:           req.DelaySeconds,
+			MessageAttributes:      req.MessageAttributes,
+			MessageBody:            aws.String(bm.Body),
+			MessageGroupId:         req.MessageGroupId,
+			MessageDeduplicationId: req.MessageDeduplicationId,
+			Id:                     id,
 		}
 		id2index[*id] = i
 	}

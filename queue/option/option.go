@@ -80,6 +80,14 @@ func MessageGroupId(groupID string) SendMessageInput {
 	}
 }
 
+// MessageDeduplicationId returns a SendMessageInput that changes MessageDeduplicationId to dupID.
+// On FIFO queues, it uniquely identify messages and prevent duplication.
+func MessageDeduplicationId(dupID string) SendMessageInput {
+	return func(req *sqs.SendMessageInput) {
+		req.MessageDeduplicationId = aws.String(dupID)
+	}
+}
+
 // MessageAttributes returns a SendMessageInput that changes MessageAttributes to attrs.
 // A string value in attrs sets to DataTypeString.
 // A []byte value in attrs sets to DataTypeBinary.
