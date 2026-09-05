@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.2.1](https://github.com/nabeken/aws-go-sqs/compare/v4.2.0...v4.2.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#291](https://github.com/nabeken/aws-go-sqs/issues/291)) ([42bc16b](https://github.com/nabeken/aws-go-sqs/commit/42bc16b310853b75af8c9ccfbcb9f30958ae84a1))
+* **deps:** update aws-sdk-go-v2 monorepo ([#295](https://github.com/nabeken/aws-go-sqs/issues/295)) ([59fea45](https://github.com/nabeken/aws-go-sqs/commit/59fea4534d5ce655dbb808376ae2cfb0a54cfef6))
+* **deps:** update aws-sdk-go-v2 monorepo ([#296](https://github.com/nabeken/aws-go-sqs/issues/296)) ([414eac1](https://github.com/nabeken/aws-go-sqs/commit/414eac1574ff3ca970a51f3efd5bf8510fd6ead9))
+* **deps:** update aws-sdk-go-v2 monorepo ([#298](https://github.com/nabeken/aws-go-sqs/issues/298)) ([f6a1b3d](https://github.com/nabeken/aws-go-sqs/commit/f6a1b3db18127037dd4953c9e7992bf44aad46e0))
+* **deps:** update aws-sdk-go-v2 monorepo ([#299](https://github.com/nabeken/aws-go-sqs/issues/299)) ([2f2aa5d](https://github.com/nabeken/aws-go-sqs/commit/2f2aa5d44dd9703a745035d2e60d6832af324f6a))
+* **deps:** update go to v1.26.6 ([#289](https://github.com/nabeken/aws-go-sqs/issues/289)) ([1c22543](https://github.com/nabeken/aws-go-sqs/commit/1c22543cf442ef038ad5cd7e45a21496d47922d4))
+* **deps:** update module github.com/aws/smithy-go to v1.27.9 ([#292](https://github.com/nabeken/aws-go-sqs/issues/292)) ([128db81](https://github.com/nabeken/aws-go-sqs/commit/128db814b04dda7526aa169c020198fc26cf7863))
+* **deps:** update module github.com/aws/smithy-go to v1.28.1 ([#297](https://github.com/nabeken/aws-go-sqs/issues/297)) ([20b3fd8](https://github.com/nabeken/aws-go-sqs/commit/20b3fd8a6a2c7d612d61263f7c7f58822c3696b2))
+* **deps:** update module github.com/stretchr/testify to v1.12.1 ([#293](https://github.com/nabeken/aws-go-sqs/issues/293)) ([8ee2d25](https://github.com/nabeken/aws-go-sqs/commit/8ee2d253dca20ef445375630407d84b900de250d))
+
 ## [4.2.0](https://github.com/nabeken/aws-go-sqs/compare/v4.1.0...v4.2.0) (2026-08-09)
 
 
