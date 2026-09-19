@@ -15,7 +15,7 @@ require (
 	github.com/stretchr/testify v1.12.1
 )
 
-require github.com/aws/smithy-go v1.28.1
+require github.com/aws/smithy-go v1.28.2
 
 require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.5 // indirect
