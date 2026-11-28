@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.2.2](https://github.com/nabeken/aws-go-sqs/compare/v4.2.1...v4.2.2) (2026-11-28)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#322](https://github.com/nabeken/aws-go-sqs/issues/322)) ([dc66de1](https://github.com/nabeken/aws-go-sqs/commit/dc66de1de44849be54953aaa0cf26ea5638e2999))
+* **deps:** update aws-sdk-go-v2 monorepo ([#325](https://github.com/nabeken/aws-go-sqs/issues/325)) ([82ae34b](https://github.com/nabeken/aws-go-sqs/commit/82ae34b2c89b179f74c0de6b78ad08b217b7e2e9))
+* **deps:** update module github.com/aws/smithy-go to v1.28.11 ([#323](https://github.com/nabeken/aws-go-sqs/issues/323)) ([c19dc48](https://github.com/nabeken/aws-go-sqs/commit/c19dc48e467e111e1d53b69b54b409cd7dfdb873))
+
 ## [4.2.1](https://github.com/nabeken/aws-go-sqs/compare/v4.2.0...v4.2.1) (2026-11-20)
 
 
